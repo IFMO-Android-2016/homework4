@@ -12,13 +12,18 @@ import android.util.Log;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;// pramp
 import java.util.List;
 import java.util.Objects;
 
 import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
 import ru.ifmo.droid2016.rzddemo.utils.TimeUtils;
+import solid.collectors.ToJoinedString;
+import solid.functions.Func1;
+import solid.stream.Stream;
 
 import static ru.ifmo.droid2016.rzddemo.Constants.LOG_DATE_FORMAT;
 import static ru.ifmo.droid2016.rzddemo.cache.TimetableCacheContract.Timetable.*;
@@ -117,21 +122,17 @@ public class TimetableCache {
                     @NonNull List<TimetableEntry> timetable) {
         SQLiteDatabase db = TimetableDBHelper.getInstance(context, version).getWritableDatabase();
         db.beginTransaction();
-        String insertion = "INSERT INTO " + TABLE + " ("
-                + DEPARTURE_DATE + ", "
-                + DEPARTURE_STATION_ID + ", "
-                + DEPARTURE_STATION_NAME + ", "
-                + DEPARTURE_TIME + ", "
-                + ARRIVAL_STATION_ID + ", "
-                + ARRIVAL_STATION_NAME + ", "
-                + ARRIVAL_TIME + ", "
-                + TRAIN_ROUTE_ID + ", "
-                + ROUTE_START_STATION_NAME + ", "
-                + ROUTE_END_STATION_NAME;
 
-        insertion += version == DataSchemeVersion.V2 ?
-                ", " + TRAIN_NAME + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" :
-                ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        Stream<String> componentStream = Stream.of(DEPARTURE_DATE)
+                .merge(Stream.stream(V1_COMPONENTS));
+        if (version == DataSchemeVersion.V2) {
+            componentStream = componentStream.merge(TRAIN_NAME);
+        }
+        String columnNames = componentStream.collect(ToJoinedString.toJoinedString(", "));
+        String questions = componentStream.map(value -> "?")
+                .collect(ToJoinedString.toJoinedString(", "));
+        String insertion = String.format("INSERT INTO %s (%s) VALUES (%s)",
+                TABLE, columnNames, questions);
 
         try (SQLiteStatement insert = db.compileStatement(insertion)) {
             for (TimetableEntry entry : timetable) {
