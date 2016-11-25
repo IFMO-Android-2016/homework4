@@ -9,7 +9,6 @@ import android.util.Log;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 
@@ -116,7 +115,7 @@ public class TimetableLoader extends AsyncTaskLoader<LoadResult<List<TimetableEn
                 + ", toStationId=" + toStationId
                 + ", date=" + LOG_DATE_FORMAT.format(fromDate.getTime())
                 + ", data size=" + data.size());
-        cache.put(fromStationId, toStationId, fromDate, data);
+        cache.put(fromDate, data);
     }
 
     private LoadResult<List<TimetableEntry>> loadFromApi() {
