@@ -19,7 +19,8 @@ import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
 import ru.ifmo.droid2016.rzddemo.utils.TimeUtils;
 
 import static ru.ifmo.droid2016.rzddemo.Constants.LOG_DATE_FORMAT;
-import static ru.ifmo.droid2016.rzddemo.db.TimetableContract.Timetable.*;
+import static ru.ifmo.droid2016.rzddemo.db.TimetableContract.Timetable.TABLE;
+import static ru.ifmo.droid2016.rzddemo.db.TimetableContract.TimetableColumns.*;
 
 /**
  * Кэш расписания поездов.
@@ -71,7 +72,6 @@ public class TimetableCache {
                                     @NonNull Calendar dateMsk)
             throws FileNotFoundException {
         SQLiteDatabase db = TimetableDBHelper.getInstance(context, version).getReadableDatabase();
-
         String[] columns = (version == DataSchemeVersion.V1
                 ?
                 new String[]{DEPARTURE_STATION_ID
@@ -81,7 +81,7 @@ public class TimetableCache {
                         , ARRIVAL_STATION_NAME
                         , ARRIVAL_TIME
                         , TRAIN_ROUTE_ID
-                        , ROUTE_START_STATION_NAME
+                        ,ROUTE_START_STATION_NAME
                         , ROUTE_END_STATION_NAME}
                 :
                 new String[]{DEPARTURE_STATION_ID
@@ -95,29 +95,30 @@ public class TimetableCache {
                         , ROUTE_END_STATION_NAME
                         , TRAIN_NAME});
 
-        String projection = DEPARTURE_DATE + "=? AND "
-                + DEPARTURE_STATION_ID + "=? AND "
-                + ARRIVAL_STATION_ID + "=?";
+        String projection = DEPARTURE_STATION_ID + "=? AND "
+                + ARRIVAL_STATION_ID + "=? AND "
+                + DEPARTURE_DATE + "=?";
 
-        String[] selectionArgs = new String[]{fromStationId
-                , toStationId, Long.toString(getDate(dateMsk))};
+        String[] selectionArgs = new String[]{fromStationId, toStationId,
+                Long.toString(getDate(dateMsk))};
 
         Cursor c = null;
         try {
-            c = db.query(TABLE, columns, projection, selectionArgs, null, null, null);
+            c = db.query(TABLE, columns, projection,
+                    selectionArgs, null, null, null);
 
             if (c != null && c.moveToFirst()) {
 
                 List<TimetableEntry> ret = new ArrayList<>();
 
-                for (; c.isAfterLast(); c.moveToNext()) {
+                for (; !c.isAfterLast(); c.moveToNext()) {
                     int i = 0;
                     String departureStationId = c.getString(i++);
                     String departureStationName = c.getString(i++);
-                    Calendar departureTime = getCurIime(c.getLong(i++));
+                    Calendar departureTime = getTime(c.getLong(i++));
                     String arrivalStationId = c.getString(i++);
                     String arrivalStationName = c.getString(i++);
-                    Calendar arrivalTime = getCurIime(c.getLong(i++));
+                    Calendar arrivalTime = getTime(c.getLong(i++));
                     String trainRouteId = c.getString(i++);
                     String routeStartStationName = c.getString(i++);
                     String routeEndStationName = c.getString(i++);
@@ -128,8 +129,8 @@ public class TimetableCache {
                     ret.add(new TimetableEntry(departureStationId, departureStationName
                             , departureTime, arrivalStationId, arrivalStationName, arrivalTime
                             , trainRouteId, trainName, routeStartStationName, routeEndStationName));
-                }
 
+                }
                 return ret;
             } else {
                 throw new FileNotFoundException("No data in timetable cache for: fromStationId="
@@ -140,18 +141,17 @@ public class TimetableCache {
             if (c != null) {
                 c.close();
             }
-
             db.close();
         }
     }
 
-    private Calendar getCurIime(long aLong) {
+    private Calendar getTime(long aLong) {
         Calendar c = Calendar.getInstance(TimeUtils.getMskTimeZone());
         c.setTime(new Date(aLong));
         return c;
     }
 
-    private long getDate(Calendar dateMSK) {
+    private long getDate(@NonNull Calendar dateMSK) {
         return dateMSK.get(Calendar.DAY_OF_YEAR) + dateMSK.get(Calendar.YEAR) * 500;
     }
 
