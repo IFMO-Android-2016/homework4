@@ -44,6 +44,7 @@ public class SelectRouteActivity extends AppCompatActivity implements View.OnCli
         if (tagVersion instanceof Integer) {
             final @DataSchemeVersion int version = (Integer) tagVersion;
 
+            //noinspection WrongConstant
             if (selectedVersion == -1 || selectedVersion == version) {
                 selectedVersion = version;
                 final Intent timetable = TimetableActivity.createIntent(this,
@@ -57,4 +58,5 @@ public class SelectRouteActivity extends AppCompatActivity implements View.OnCli
             }
         }
     }
+
 }

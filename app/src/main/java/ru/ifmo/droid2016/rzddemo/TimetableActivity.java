@@ -19,6 +19,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import ru.ifmo.droid2016.rzddemo.cache.DataSchemeVersion;
+import ru.ifmo.droid2016.rzddemo.cache.TimetableCache;
 import ru.ifmo.droid2016.rzddemo.loader.LoadResult;
 import ru.ifmo.droid2016.rzddemo.loader.ResultType;
 import ru.ifmo.droid2016.rzddemo.loader.TimetableLoader;
@@ -226,5 +227,11 @@ public class TimetableActivity extends AppCompatActivity implements
     private void displayDate() {
         dateView.setText(dateFormat.format(currentDate.getTime()));
         previousButton.setVisibility(isPreviousDateEnabled ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    @Override
+    protected void onDestroy() {
+        new TimetableCache(this,DataSchemeVersion.V1).close();
+        super.onDestroy();
     }
 }
