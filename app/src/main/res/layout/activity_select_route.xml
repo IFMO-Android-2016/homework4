@@ -24,7 +24,6 @@
             android:id="@+id/station_departure"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:enabled="false"
             style="@style/EditText_Station"/>
 
         <TextView
@@ -37,7 +36,6 @@
             android:id="@+id/station_arrival"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:enabled="false"
             style="@style/EditText_Station"/>
 
     </LinearLayout>
