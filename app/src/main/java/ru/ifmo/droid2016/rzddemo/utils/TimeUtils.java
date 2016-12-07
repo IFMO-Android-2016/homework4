@@ -3,6 +3,8 @@ package ru.ifmo.droid2016.rzddemo.utils;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
@@ -44,6 +46,14 @@ public final class TimeUtils {
         Calendar now = Calendar.getInstance(TimeUtils.getMskTimeZone());
         now.setTimeInMillis(System.currentTimeMillis());
         return now;
+    }
+
+    public static Calendar getTime(String string, SimpleDateFormat schemaDateTime) throws ParseException {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeUtils.getMskTimeZone());
+        calendar.setTime(schemaDateTime.parse(string));
+        return calendar;
     }
 
     public static Calendar getNextDay(Calendar date) {

@@ -19,6 +19,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import ru.ifmo.droid2016.rzddemo.cache.DataSchemeVersion;
+import ru.ifmo.droid2016.rzddemo.cache.TimetableCache;
 import ru.ifmo.droid2016.rzddemo.loader.LoadResult;
 import ru.ifmo.droid2016.rzddemo.loader.ResultType;
 import ru.ifmo.droid2016.rzddemo.loader.TimetableLoader;
@@ -210,6 +211,12 @@ public class TimetableActivity extends AppCompatActivity implements
         }
         errorTextView.setText(messageResId);
         enableButton();
+    }
+
+    @Override
+    protected void onDestroy() {
+        new TimetableCache(this, DataSchemeVersion.V1).close();
+        super.onDestroy();
     }
 
     private void disableButtons() {
