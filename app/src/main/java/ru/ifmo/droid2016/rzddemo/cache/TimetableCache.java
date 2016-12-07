@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
+import android.widget.ProgressBar;
 
 import java.io.FileNotFoundException;
 import java.util.Date;
@@ -66,6 +67,8 @@ public class TimetableCache {
     }
 
 
+
+
     String getMask(Calendar calendar) {
         StringBuilder res = new StringBuilder(calendar.getTime().toString());
         return res.replace(11, 19, "__:__:__").toString();
@@ -103,19 +106,8 @@ public class TimetableCache {
         try {
             cursor = db.query(
                     MySQLiteOpenHelper.TABLE_NAME,
-                    new String[]{
-                            MySQLiteOpenHelper.DEPARTURES_STATION_ID,
-                            MySQLiteOpenHelper.DEPARTURES_STATION_NAME,
-                            MySQLiteOpenHelper.DEPARTURES_TIME,
+                    MySQLiteOpenHelper.getColonsNames(version),
 
-                            MySQLiteOpenHelper.ARRIVAL_STATION_ID,
-                            MySQLiteOpenHelper.ARRIVAL_STATION_NAME,
-                            MySQLiteOpenHelper.ARRIVAL_TIME,
-
-                            MySQLiteOpenHelper.TRAIN_ROUTE_ID,
-                            MySQLiteOpenHelper.ROUTE_START_STATION_NAME,
-                            MySQLiteOpenHelper.ROUTE_END_STATION_NAME,
-                    },
                     MySQLiteOpenHelper.DEPARTURES_STATION_ID + "=? AND "
                     + MySQLiteOpenHelper.ARRIVAL_STATION_ID + "=? AND "
                     + MySQLiteOpenHelper.DEPARTURES_TIME + " LIKE ?"
@@ -146,10 +138,20 @@ public class TimetableCache {
                     arrivalTime.setTime(sdf.parse(cursor.getString(5)));
 
                     final String trainRouteId = cursor.getString(6);
-                    final String trainName = null;
                     final String routeStartStationName = cursor.getString(7);
                     final String routeEndStationName = cursor.getString(8);
 
+                    String trainName = null;
+                    if (version != DataSchemeVersion.V1) {
+
+                        trainName = cursor.getString(9);
+
+                        if (trainName.equals("NULL")) {
+                            trainName = null;
+                        }
+
+                        Log.d(LOG_TAG, trainName + " ?????");
+                    }
 
                     Log.d(LOG_TAG, "res: \n"
                             + departureStationId + "\n"
@@ -161,6 +163,9 @@ public class TimetableCache {
                             + arrivalTime.getTime() + "\n"
 
                             + trainRouteId + "\n"
+
+                            + trainName + "\n"
+
                             + routeStartStationName + "\n"
                             + routeEndStationName + "\n"
                     );
@@ -210,27 +215,24 @@ public class TimetableCache {
 
         Log.d(LOG_TAG, "put: ");
 
-
         SQLiteDatabase db = mySQLHelper.getWritableDatabase();
-
-        //TODO : SQLiteStatement
-
         SQLiteStatement statement = null;
 
-
         try {
-            statement = db.compileStatement(
-                    "INSERT INTO "
-                            + MySQLiteOpenHelper.TABLE_NAME + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);"
-            );
+            if (version == DataSchemeVersion.V1) {
+                statement = db.compileStatement(
+                        "INSERT INTO "
+                                + MySQLiteOpenHelper.TABLE_NAME + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);");
+            } else {
+                statement = db.compileStatement(
+                        "INSERT INTO "
+                                + MySQLiteOpenHelper.TABLE_NAME + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+            }
             db.beginTransaction();
 
             try {
 
                 for (TimetableEntry e : timetable) {
-//                    ContentValues values = new ContentValues();
-
-
                     Date date;
 
                     statement.clearBindings();
@@ -240,6 +242,9 @@ public class TimetableCache {
                     date = e.departureTime.getTime();
                     date.setTime(date.getTime() + 60 * 60 * 1000 * 3);
                     statement.bindString(3, String.valueOf(date));
+
+                    Log.d(LOG_TAG, String.valueOf(date)  + " TIME!!!");
+
 
                     statement.bindString(4, e.arrivalStationId);
                     statement.bindString(5, e.arrivalStationName);
@@ -251,38 +256,24 @@ public class TimetableCache {
                     statement.bindString(8, e.routeStartStationName);
                     statement.bindString(9, e.routeEndStationName);
 
+                    if (version != DataSchemeVersion.V1) {
+                        String res = e.trainName;
+                        if (res == null) {
+                            res = "NULL";
+                        }
+                        Log.d(LOG_TAG, res + " !!!!!!");
+                        statement.bindString(10, res);
+                    }
+
                     statement.execute();
 
-//                    values.put(MySQLiteOpenHelper.DEPARTURES_STATION_ID, e.departureStationId);
-//                    values.put(MySQLiteOpenHelper.DEPARTURES_STATION_NAME, e.departureStationName);
-//                    date = e.departureTime.getTime();
-//                    date.setTime(date.getTime() + 60 * 60 * 1000 * 3);
-//                    values.put(MySQLiteOpenHelper.DEPARTURES_TIME, String.valueOf(date));
-
-//                    values.put(MySQLiteOpenHelper.ARRIVAL_STATION_ID, e.arrivalStationId);
-//                    values.put(MySQLiteOpenHelper.ARRIVAL_STATION_NAME, e.arrivalStationName);
-//                    date = e.arrivalTime.getTime();
-//                    date.setTime(date.getTime() + 60 * 60 * 1000 * 3);
-//                    values.put(MySQLiteOpenHelper.ARRIVAL_TIME, String.valueOf(date));
-
-//                    values.put(MySQLiteOpenHelper.TRAIN_ROUTE_ID, e.trainRouteId);
-//                    values.put(MySQLiteOpenHelper.ROUTE_START_STATION_NAME, e.routeStartStationName);
-//                    values.put(MySQLiteOpenHelper.ROUTE_END_STATION_NAME, e.routeEndStationName);
-
-                    Log.d(LOG_TAG, "res_in: \n"
-                            + e.departureStationId + "\n"
+                    Log.d(LOG_TAG,
+                            e.departureStationId + "\n"
                             + e.departureStationName + "\n"
-                            + e.departureTime.getTime() + "\n"
 
-                            + e.arrivalStationId + "\n"
-                            + e.arrivalStationName + "\n"
-                            + e.arrivalTime.getTime() + "\n"
 
-                            + e.trainRouteId + "\n"
-                            + e.routeStartStationName + "\n"
-                            + e.routeEndStationName + "\n"
-                    );
-                    Log.d(LOG_TAG, "insert");
+                            );
+
                 }
                 db.setTransactionSuccessful();
             } finally {

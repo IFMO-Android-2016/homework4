@@ -41,25 +41,84 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
 
 
     public static final String TRAIN_ROUTE_ID = "COLUMN_TRAIN_ROUTE_ID";
+
+    public static final String TRAIN_NAME = "COLUMN_TRAIN_NAME";
+
     public static final String ROUTE_START_STATION_NAME = "COLUMN_ROUTE_START_STATION_NAME";
     public static final String ROUTE_END_STATION_NAME = "COLUMN_ROUTE_END_STATION_NAME";
 
+    public static String[] getColonsNames(int version) {
+        if (version == 1) {
+            String []res = {
+                    DEPARTURES_STATION_ID,
+                    DEPARTURES_STATION_NAME,
+                    DEPARTURES_TIME,
 
-    public static final String SQL_CREATE_ENTRIES = "CREATE TABLE " + TABLE_NAME
-            + "("
-            + DEPARTURES_STATION_ID + " TEXT, "
-            + DEPARTURES_STATION_NAME + " TEXT, "
-            + DEPARTURES_TIME + " TEXT, "
+                    ARRIVAL_STATION_ID,
+                    ARRIVAL_STATION_NAME,
+                    ARRIVAL_TIME,
 
-            + ARRIVAL_STATION_ID + " TEXT, "
-            + ARRIVAL_STATION_NAME + " TEXT, "
-            + ARRIVAL_TIME + " TEXT, "
+                    TRAIN_ROUTE_ID,
+                    ROUTE_START_STATION_NAME,
+                    ROUTE_END_STATION_NAME,
+            };
+            return res;
+        } else {
+            String []res = {
+                    DEPARTURES_STATION_ID,
+                    DEPARTURES_STATION_NAME,
+                    DEPARTURES_TIME,
 
-            + TRAIN_ROUTE_ID + " TEXT, "
-            + ROUTE_START_STATION_NAME + " TEXT, "
-            + ROUTE_END_STATION_NAME + " TEXT"
+                    ARRIVAL_STATION_ID,
+                    ARRIVAL_STATION_NAME,
+                    ARRIVAL_TIME,
 
-            + ");";
+                    TRAIN_ROUTE_ID,
+                    ROUTE_START_STATION_NAME,
+                    ROUTE_END_STATION_NAME,
+
+                    TRAIN_NAME,
+            };
+            return res;
+        }
+    }
+
+
+    public static final String SQL_CREATE_ENTRIES[] = {
+            "CREATE TABLE " + TABLE_NAME
+                    + "("
+                    + DEPARTURES_STATION_ID + " TEXT, "
+                    + DEPARTURES_STATION_NAME + " TEXT, "
+                    + DEPARTURES_TIME + " TEXT, "
+
+                    + ARRIVAL_STATION_ID + " TEXT, "
+                    + ARRIVAL_STATION_NAME + " TEXT, "
+                    + ARRIVAL_TIME + " TEXT, "
+
+                    + TRAIN_ROUTE_ID + " TEXT, "
+                    + ROUTE_START_STATION_NAME + " TEXT, "
+                    + ROUTE_END_STATION_NAME + " TEXT"
+
+                    + ");"
+            ,
+
+            "CREATE TABLE " + TABLE_NAME
+                    + "("
+                    + DEPARTURES_STATION_ID + " TEXT, "
+                    + DEPARTURES_STATION_NAME + " TEXT, "
+                    + DEPARTURES_TIME + " TEXT, "
+
+                    + ARRIVAL_STATION_ID + " TEXT, "
+                    + ARRIVAL_STATION_NAME + " TEXT, "
+                    + ARRIVAL_TIME + " TEXT, "
+
+                    + TRAIN_ROUTE_ID + " TEXT, "
+                    + ROUTE_START_STATION_NAME + " TEXT, "
+                    + ROUTE_END_STATION_NAME + " TEXT, "
+
+                    + TRAIN_NAME + " TEXT"
+                    + ");"
+    };
 
     private static volatile MySQLiteOpenHelper instance = null;
 
@@ -79,12 +138,9 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
         return instance;
     }
 
-
-
-
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(SQL_CREATE_ENTRIES);
+        db.execSQL(SQL_CREATE_ENTRIES[DATABASE_VERSION - 1]);
 
         Log.d(LOG_TAG, "in onCreate()");
     }
@@ -94,6 +150,9 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.d(LOG_TAG, "onUpgrade" + oldVersion + " " + newVersion);
 
+        if ((oldVersion == 1) && (newVersion == 2)) {
+            db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD " + TRAIN_NAME + " TEXT");
+        }
     }
 
 
