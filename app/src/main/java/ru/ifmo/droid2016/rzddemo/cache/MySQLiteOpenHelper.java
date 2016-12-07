@@ -26,9 +26,9 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
 // +   final String arrivalStationName;
 // +   final Calendar arrivalTime;
 //    final String trainRouteId;
-//    final String trainName;
-//    final String routeStartStationName;
-//    final String routeEndStationName;
+// +   final String trainName;
+// +   final String routeStartStationName;
+// +   final String routeEndStationName;
 
 
     public static final String DEPARTURES_STATION_ID = "COLUMN_DEPARTURES_STATION_ID";
@@ -40,15 +40,24 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
     public static final String ARRIVAL_TIME = "COLUMN_ARRIVAL_TIME";
 
 
+    public static final String TRAIN_ROUTE_ID = "COLUMN_TRAIN_ROUTE_ID";
+    public static final String ROUTE_START_STATION_NAME = "COLUMN_ROUTE_START_STATION_NAME";
+    public static final String ROUTE_END_STATION_NAME = "COLUMN_ROUTE_END_STATION_NAME";
+
+
     public static final String SQL_CREATE_ENTRIES = "CREATE TABLE " + TABLE_NAME
-            + "(_id INTEGER PRIMARY KEY, "
+            + "("
             + DEPARTURES_STATION_ID + " TEXT, "
             + DEPARTURES_STATION_NAME + " TEXT, "
             + DEPARTURES_TIME + " TEXT, "
 
             + ARRIVAL_STATION_ID + " TEXT, "
             + ARRIVAL_STATION_NAME + " TEXT, "
-            + ARRIVAL_TIME + " TEXT"
+            + ARRIVAL_TIME + " TEXT, "
+
+            + TRAIN_ROUTE_ID + " TEXT, "
+            + ROUTE_START_STATION_NAME + " TEXT, "
+            + ROUTE_END_STATION_NAME + " TEXT"
 
             + ");";
 
