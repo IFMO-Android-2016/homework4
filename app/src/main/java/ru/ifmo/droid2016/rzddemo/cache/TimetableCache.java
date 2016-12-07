@@ -103,6 +103,8 @@ public class TimetableCache {
         SQLiteDatabase db = mySQLHelper.getReadableDatabase();
         Cursor cursor = null;
 
+        Log.d(LOG_TAG, "1");
+
         try {
             cursor = db.query(
                     MySQLiteOpenHelper.TABLE_NAME,
@@ -120,10 +122,16 @@ public class TimetableCache {
                     null, null, null
             );
 
+            Log.d(LOG_TAG, "2");
+
             if ((cursor != null) && (cursor.moveToFirst())) {
                 SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
 
+                Log.d(LOG_TAG, "3");
+
                 for (; !cursor.isAfterLast(); cursor.moveToNext()) {
+
+                    Log.d(LOG_TAG, "++++++++++++");
 
                     final String departureStationId = cursor.getString(0);
                     final String departureStationName = cursor.getString(1);
@@ -134,24 +142,30 @@ public class TimetableCache {
                     final String arrivalStationId = cursor.getString(3);
                     final String arrivalStationName = cursor.getString(4);
 
+                    Log.d(LOG_TAG, "???");
+
                     final Calendar arrivalTime = Calendar.getInstance();
                     arrivalTime.setTime(sdf.parse(cursor.getString(5)));
+
+                    Log.d(LOG_TAG, "???");
 
                     final String trainRouteId = cursor.getString(6);
                     final String routeStartStationName = cursor.getString(7);
                     final String routeEndStationName = cursor.getString(8);
+
+                    Log.d(LOG_TAG, "???");
 
                     String trainName = null;
                     if (version != DataSchemeVersion.V1) {
 
                         trainName = cursor.getString(9);
 
-                        if (trainName.equals("NULL")) {
+                        if ((trainName != null) && (trainName.equals("NULL"))) {
                             trainName = null;
                         }
-
-                        Log.d(LOG_TAG, trainName + " ?????");
                     }
+
+                    Log.d(LOG_TAG, "?!?!?!!");
 
                     Log.d(LOG_TAG, "res: \n"
                             + departureStationId + "\n"
@@ -190,7 +204,7 @@ public class TimetableCache {
             }
 
         } catch (Exception ex) {
-
+            Log.d(LOG_TAG, ex.toString());
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -276,6 +290,9 @@ public class TimetableCache {
 
                 }
                 db.setTransactionSuccessful();
+
+                Log.d(LOG_TAG, "OK_2");
+
             } finally {
                 db.endTransaction();
             }

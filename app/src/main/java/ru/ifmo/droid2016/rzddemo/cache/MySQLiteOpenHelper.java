@@ -1,11 +1,20 @@
 package ru.ifmo.droid2016.rzddemo.cache;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
 
 /**
  * Created by Vlad_kv on 05.12.2016.
@@ -143,6 +152,95 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
         db.execSQL(SQL_CREATE_ENTRIES[DATABASE_VERSION - 1]);
 
         Log.d(LOG_TAG, "in onCreate()");
+    }
+
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+        if ((oldVersion == 2) && (newVersion == 1)) {
+            String creating_command = "CREATE TABLE " + "new_" + TABLE_NAME
+                    + "("
+                    + DEPARTURES_STATION_ID + " TEXT, "
+                    + DEPARTURES_STATION_NAME + " TEXT, "
+                    + DEPARTURES_TIME + " TEXT, "
+
+                    + ARRIVAL_STATION_ID + " TEXT, "
+                    + ARRIVAL_STATION_NAME + " TEXT, "
+                    + ARRIVAL_TIME + " TEXT, "
+
+                    + TRAIN_ROUTE_ID + " TEXT, "
+                    + ROUTE_START_STATION_NAME + " TEXT, "
+                    + ROUTE_END_STATION_NAME + " TEXT"
+
+                    + ");";
+
+            db.execSQL(creating_command);
+
+            Cursor cursor = null;
+
+
+
+            SQLiteStatement statement = null;
+
+            try {
+                statement = db.compileStatement(
+                        "INSERT INTO "
+                                + "new_" + TABLE_NAME + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);");
+                db.beginTransaction();
+
+                cursor = db.query(
+                        TABLE_NAME,
+                        getColonsNames(1),
+                        null,
+                        null,
+                        null, null, null
+                );
+
+                if ((cursor != null) && (cursor.moveToFirst())) {
+                    try {
+                        for (; !cursor.isAfterLast(); cursor.moveToNext()) {
+                            statement.clearBindings();
+
+                            Log.d(LOG_TAG, "+");
+
+                            statement.bindString(1, cursor.getString(0));
+                            statement.bindString(2, cursor.getString(1));
+                            statement.bindString(3, cursor.getString(2));
+
+                            statement.bindString(4, cursor.getString(3));
+                            statement.bindString(5, cursor.getString(4));
+                            statement.bindString(6, cursor.getString(5));
+
+                            statement.bindString(7, cursor.getString(6));
+                            statement.bindString(8, cursor.getString(7));
+                            statement.bindString(9, cursor.getString(8));
+
+                            statement.execute();
+                        }
+                        db.setTransactionSuccessful();
+
+                        Log.d(LOG_TAG, "OK");
+
+                    } catch (Exception ex) {
+                    } finally {
+                        db.endTransaction();
+                    }
+                }
+            } finally {
+                if (statement != null) {
+                    statement.close();
+                }
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+
+
+            db.execSQL("DROP TABLE " + TABLE_NAME);
+
+            db.execSQL("ALTER TABLE new_" + TABLE_NAME + " RENAME TO " + TABLE_NAME);
+        }
     }
 
 
