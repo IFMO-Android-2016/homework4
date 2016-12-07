@@ -9,7 +9,7 @@ import android.util.Log;
 /**
  * Created by ghost on 12/7/2016.
  */
-public class SQLiteHelper extends SQLiteOpenHelper {
+class SQLiteHelper extends SQLiteOpenHelper {
     static final String TABLE_NAME = "timetable";
     static final String DATE = "date";
     static final String DEPARTURE_STATION_ID = "departure_station_id";
@@ -26,16 +26,14 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     private static final String DB_FILENAME = "table.db";
     private static volatile SQLiteHelper instance;
 
-    private final Context context;
     private final int version;
 
-    public SQLiteHelper(Context context, @DataSchemeVersion int version) {
+    private SQLiteHelper(Context context, @DataSchemeVersion int version) {
         super(context, DB_FILENAME, null, version);
-        this.context = context;
         this.version = version;
     }
 
-    public static SQLiteHelper getInstance(Context context, int version) {
+    static SQLiteHelper getInstance(Context context, int version) {
         if (instance == null) {
             synchronized (SQLiteHelper.class) {
                 if (instance == null) {
