@@ -1,5 +1,6 @@
 package ru.ifmo.droid2016.rzddemo.model;
 
+import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -8,7 +9,7 @@ import java.util.Calendar;
 /**
  * Элемент расписания движения поездов.
  */
-public class TimetableEntry {
+public class TimetableEntry implements BaseColumns {
 
     /**
      * ID станции отправления.
