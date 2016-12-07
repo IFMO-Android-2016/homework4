@@ -2,6 +2,7 @@ package ru.ifmo.droid2016.rzddemo.cache;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 import android.util.Log;
@@ -52,9 +53,9 @@ public class TimetableReaderDBHelper extends SQLiteOpenHelper {
             // i wish i could Stream::collect
 
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < Scheme.TT_V1.length; i++) {
-                sb.append(Scheme.TT_V1[i]);
-                if (i != Scheme.TT_V1.length - 1)
+            for (int i = 0; i < s.length; i++) {
+                sb.append(s[i]);
+                if (i != s.length - 1)
                     sb.append(", ");
             }
             return sb.toString();
@@ -97,9 +98,9 @@ public class TimetableReaderDBHelper extends SQLiteOpenHelper {
             Scheme.COLUMN_NAME_TR_NAME + TEXT_TYPE +
             " ) ";
 
-    private static final String DELETE = "DROP TABLE IF EXISTS " + Scheme.DB_NAME;
+    private static final String DELETE = "DROP TABLE IF EXISTS " + Scheme.TABLE_NAME;
 
-    private static final String ONE_TO_TWO_UPGRADE = "ALTER TABLE " + Scheme.DB_NAME +
+    private static final String ONE_TO_TWO_UPGRADE = "ALTER TABLE " + Scheme.TABLE_NAME +
             " ADD COLUMN " + Scheme.COLUMN_NAME_TR_NAME + TEXT_TYPE;
 
     private int ver;
@@ -131,6 +132,7 @@ public class TimetableReaderDBHelper extends SQLiteOpenHelper {
         db.beginTransaction();
         try {
             db.execSQL(q);
+
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -146,7 +148,15 @@ public class TimetableReaderDBHelper extends SQLiteOpenHelper {
 
         db.beginTransaction();
         try {
-            db.execSQL(q);
+            try {
+                db.execSQL(q);
+            } catch (SQLiteException e) {
+                if (e.getMessage().contains("duplicate")) {
+                    // purely cool
+                } else {
+                    throw e;
+                }
+            }
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();

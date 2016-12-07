@@ -98,18 +98,18 @@ public class TimetableCache {
             if (ptr != null && ptr.moveToFirst()) {
                 for (; !ptr.isAfterLast(); ptr.moveToNext()) {
                     TimetableEntry entry = new TimetableEntry(
-                            ptr.getString(2),
+                            ptr.getString(0),
+                            ptr.getString(1),
+                            new GregorianCalendar(),
                             ptr.getString(3),
+                            ptr.getString(4),
                             new GregorianCalendar(),
-                            ptr.getString(5),
                             ptr.getString(6),
-                            new GregorianCalendar(),
-                            ptr.getString(8),
-                            (ver == DataSchemeVersion.V1) ? null : ptr.getString(14),
-                            ptr.getString(9),
-                            ptr.getString(10));
-                    entry.departureTime.setTimeInMillis(ptr.getLong(4));
-                    entry.arrivalTime.setTimeInMillis(ptr.getLong(7));
+                            (ver == DataSchemeVersion.V1) ? null : ptr.getString(12),
+                            ptr.getString(7),
+                            ptr.getString(8));
+                    entry.departureTime.setTimeInMillis(ptr.getLong(2));
+                    entry.arrivalTime.setTimeInMillis(ptr.getLong(5));
 
                     list.add(entry);
                 }
@@ -147,30 +147,30 @@ public class TimetableCache {
         try {
             if (ver == DataSchemeVersion.V1) {
                 insStatement = db.compileStatement("INSERT INTO " + TimetableReaderDBHelper.Scheme.TABLE_NAME + " ("
-                        + TimetableReaderDBHelper.Scheme.select(ver) + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        + TimetableReaderDBHelper.Scheme.select(ver) + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             } else {
                 insStatement = db.compileStatement("INSERT INTO " + TimetableReaderDBHelper.Scheme.TABLE_NAME + " ("
-                        + TimetableReaderDBHelper.Scheme.select(ver) + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        + TimetableReaderDBHelper.Scheme.select(ver) + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             }
 
             Log.d(TAG, "put: insStatement: " + insStatement.toString());
 
-            insStatement.bindString(11, LOG_DATE_FORMAT.format(dateMsk.getTime()));
-            insStatement.bindString(12, fromStationId);
-            insStatement.bindString(13, toStationId);
+            insStatement.bindString(10, LOG_DATE_FORMAT.format(dateMsk.getTime()));
+            insStatement.bindString(11, fromStationId);
+            insStatement.bindString(12, toStationId);
             for (int i = 0; i < timetable.size(); ++i) {
                 TimetableEntry e = timetable.get(i);
-                insStatement.bindString(2, e.departureStationId);
-                insStatement.bindString(3, e.departureStationName);
-                insStatement.bindLong(4, e.departureTime.getTimeInMillis());
-                insStatement.bindString(5, e.arrivalStationId);
-                insStatement.bindString(6, e.arrivalStationName);
-                insStatement.bindLong(7, e.arrivalTime.getTimeInMillis());
-                insStatement.bindString(8, e.trainRouteId);
-                insStatement.bindString(9, e.routeStartStationName);
-                insStatement.bindString(10, e.routeEndStationName);
+                insStatement.bindString(1, e.departureStationId);
+                insStatement.bindString(2, e.departureStationName);
+                insStatement.bindLong(3, e.departureTime.getTimeInMillis());
+                insStatement.bindString(4, e.arrivalStationId);
+                insStatement.bindString(5, e.arrivalStationName);
+                insStatement.bindLong(6, e.arrivalTime.getTimeInMillis());
+                insStatement.bindString(7, e.trainRouteId);
+                insStatement.bindString(8, e.routeStartStationName);
+                insStatement.bindString(9, e.routeEndStationName);
                 if (ver == DataSchemeVersion.V2 && e.trainName != null) {
-                    insStatement.bindString(14, e.trainName);
+                    insStatement.bindString(13, e.trainName);
                 }
                 insStatement.executeInsert();
             }
