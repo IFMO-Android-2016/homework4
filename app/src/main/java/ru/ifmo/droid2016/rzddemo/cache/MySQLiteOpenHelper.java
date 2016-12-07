@@ -5,40 +5,16 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
-import android.util.Log;
-
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-
-import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
 
 /**
  * Created by Vlad_kv on 05.12.2016.
  */
 
 public class MySQLiteOpenHelper extends SQLiteOpenHelper{
-    final String LOG_TAG = "my_tag";
-
     public static final String TABLE_NAME = "timetable";
 
     public final int DATABASE_VERSION;
     public static final String DATABASE_NAME = "Timetable.db";
-
-// +   final String departureStationId = cursor.getString(0);
-// +   final String departureStationName = cursor.getString(1);
-// +   final Calendar departureTime;
-// +   final String arrivalStationId;
-// +   final String arrivalStationName;
-// +   final Calendar arrivalTime;
-//    final String trainRouteId;
-// +   final String trainName;
-// +   final String routeStartStationName;
-// +   final String routeEndStationName;
-
 
     public static final String DEPARTURES_STATION_ID = "COLUMN_DEPARTURES_STATION_ID";
     public static final String DEPARTURES_STATION_NAME = "COLUMN_DEPARTURES_STATION_NAME";
@@ -150,10 +126,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_ENTRIES[DATABASE_VERSION - 1]);
-
-        Log.d(LOG_TAG, "in onCreate()");
     }
-
 
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -178,9 +151,6 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
             db.execSQL(creating_command);
 
             Cursor cursor = null;
-
-
-
             SQLiteStatement statement = null;
 
             try {
@@ -202,8 +172,6 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
                         for (; !cursor.isAfterLast(); cursor.moveToNext()) {
                             statement.clearBindings();
 
-                            Log.d(LOG_TAG, "+");
-
                             statement.bindString(1, cursor.getString(0));
                             statement.bindString(2, cursor.getString(1));
                             statement.bindString(3, cursor.getString(2));
@@ -219,9 +187,6 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
                             statement.execute();
                         }
                         db.setTransactionSuccessful();
-
-                        Log.d(LOG_TAG, "OK");
-
                     } catch (Exception ex) {
                     } finally {
                         db.endTransaction();
@@ -236,22 +201,17 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper{
                 }
             }
 
-
             db.execSQL("DROP TABLE " + TABLE_NAME);
 
             db.execSQL("ALTER TABLE new_" + TABLE_NAME + " RENAME TO " + TABLE_NAME);
         }
     }
 
-
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.d(LOG_TAG, "onUpgrade" + oldVersion + " " + newVersion);
-
         if ((oldVersion == 1) && (newVersion == 2)) {
             db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD " + TRAIN_NAME + " TEXT");
         }
     }
-
 
 }

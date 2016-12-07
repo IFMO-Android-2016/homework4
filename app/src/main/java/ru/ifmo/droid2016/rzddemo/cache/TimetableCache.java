@@ -35,9 +35,6 @@ import static ru.ifmo.droid2016.rzddemo.Constants.LOG_DATE_FORMAT;
  */
 
 public class TimetableCache {
-    final String LOG_TAG = "cache_log";
-
-
     private MySQLiteOpenHelper mySQLHelper;
 
     @NonNull
@@ -93,17 +90,11 @@ public class TimetableCache {
                                     @NonNull Calendar dateMsk)
             throws FileNotFoundException {
 
-        Log.d(LOG_TAG, "get: " + dateMsk.getTime());
-
-
         String mask = getMask(dateMsk);
-        Log.d(LOG_TAG, mask);
 
         List<TimetableEntry> res = new ArrayList<>();
         SQLiteDatabase db = mySQLHelper.getReadableDatabase();
         Cursor cursor = null;
-
-        Log.d(LOG_TAG, "1");
 
         try {
             cursor = db.query(
@@ -122,17 +113,10 @@ public class TimetableCache {
                     null, null, null
             );
 
-            Log.d(LOG_TAG, "2");
-
             if ((cursor != null) && (cursor.moveToFirst())) {
                 SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
 
-                Log.d(LOG_TAG, "3");
-
                 for (; !cursor.isAfterLast(); cursor.moveToNext()) {
-
-                    Log.d(LOG_TAG, "++++++++++++");
-
                     final String departureStationId = cursor.getString(0);
                     final String departureStationName = cursor.getString(1);
 
@@ -142,48 +126,21 @@ public class TimetableCache {
                     final String arrivalStationId = cursor.getString(3);
                     final String arrivalStationName = cursor.getString(4);
 
-                    Log.d(LOG_TAG, "???");
-
                     final Calendar arrivalTime = Calendar.getInstance();
                     arrivalTime.setTime(sdf.parse(cursor.getString(5)));
-
-                    Log.d(LOG_TAG, "???");
 
                     final String trainRouteId = cursor.getString(6);
                     final String routeStartStationName = cursor.getString(7);
                     final String routeEndStationName = cursor.getString(8);
 
-                    Log.d(LOG_TAG, "???");
-
                     String trainName = null;
                     if (version != DataSchemeVersion.V1) {
-
                         trainName = cursor.getString(9);
 
                         if ((trainName != null) && (trainName.equals("NULL"))) {
                             trainName = null;
                         }
                     }
-
-                    Log.d(LOG_TAG, "?!?!?!!");
-
-                    Log.d(LOG_TAG, "res: \n"
-                            + departureStationId + "\n"
-                            + departureStationName + "\n"
-                            + departureTime.getTime() + "\n"
-
-                            + arrivalStationId + "\n"
-                            + arrivalStationName + "\n"
-                            + arrivalTime.getTime() + "\n"
-
-                            + trainRouteId + "\n"
-
-                            + trainName + "\n"
-
-                            + routeStartStationName + "\n"
-                            + routeEndStationName + "\n"
-                    );
-
 
                     res.add(new TimetableEntry(
                             departureStationId,
@@ -199,12 +156,10 @@ public class TimetableCache {
                             routeStartStationName,
                             routeEndStationName
                     ));
-
                 }
             }
 
         } catch (Exception ex) {
-            Log.d(LOG_TAG, ex.toString());
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -215,7 +170,6 @@ public class TimetableCache {
             return res;
         }
 
-        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
         throw new FileNotFoundException("No data in timetable cache for: fromStationId="
                 + fromStationId + ", toStationId=" + toStationId
                 + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
@@ -226,8 +180,6 @@ public class TimetableCache {
                     @NonNull String toStationId,
                     @NonNull Calendar dateMsk,
                     @NonNull List<TimetableEntry> timetable) {
-
-        Log.d(LOG_TAG, "put: ");
 
         SQLiteDatabase db = mySQLHelper.getWritableDatabase();
         SQLiteStatement statement = null;
@@ -253,12 +205,9 @@ public class TimetableCache {
 
                     statement.bindString(1, e.departureStationId);
                     statement.bindString(2, e.departureStationName);
-                    date = e.departureTime.getTime();
-                    date.setTime(date.getTime() + 60 * 60 * 1000 * 3);
-                    statement.bindString(3, String.valueOf(date));
-
-                    Log.d(LOG_TAG, String.valueOf(date)  + " TIME!!!");
-
+                    date = e.departureTime.getTime();                   //  e.departureTime.getTimeZone().getDSTSavings() почему-то
+                    date.setTime(date.getTime() + 60 * 60 * 1000 * 3);  //  всегда равнялся нулю, а других нормальных способов я не
+                    statement.bindString(3, String.valueOf(date));      //  нашёл.
 
                     statement.bindString(4, e.arrivalStationId);
                     statement.bindString(5, e.arrivalStationName);
@@ -275,24 +224,12 @@ public class TimetableCache {
                         if (res == null) {
                             res = "NULL";
                         }
-                        Log.d(LOG_TAG, res + " !!!!!!");
                         statement.bindString(10, res);
                     }
 
                     statement.execute();
-
-                    Log.d(LOG_TAG,
-                            e.departureStationId + "\n"
-                            + e.departureStationName + "\n"
-
-
-                            );
-
                 }
                 db.setTransactionSuccessful();
-
-                Log.d(LOG_TAG, "OK_2");
-
             } finally {
                 db.endTransaction();
             }
@@ -302,6 +239,5 @@ public class TimetableCache {
                 statement.close();
             }
         }
-        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
     }
 }
