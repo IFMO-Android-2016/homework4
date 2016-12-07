@@ -1,6 +1,7 @@
 package ru.ifmo.droid2016.rzddemo.cache;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
@@ -66,6 +67,8 @@ public class TimetableCache {
                                     @NonNull Calendar dateMsk)
             throws FileNotFoundException {
         // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
+
+//        SQLiteOpenHelper
         throw new FileNotFoundException("No data in timetable cache for: fromStationId="
                 + fromStationId + ", toStationId=" + toStationId
                 + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
