@@ -76,7 +76,7 @@ public class TimetableCache {
             throws FileNotFoundException {
 
         SQLiteDatabase database = TimetableOpenHelper.getInstance(context, version).getReadableDatabase();
-        System.out.println(Integer.toString(version));
+        //System.out.println(Integer.toString(version));
 
         Cursor cursor = null;
         ArrayList <TimetableEntry> result = null;
@@ -128,8 +128,6 @@ public class TimetableCache {
                                 cursor.getString(13)));
                     }
                 }
-            } else {
-                System.out.println("Badovo");
             }
         } finally {
             if (cursor == null) {
