@@ -51,7 +51,7 @@ public class TimetableOpenHelper extends SQLiteOpenHelper {
 	public void onDowngrade(SQLiteDatabase database, int oldVersion, int newVersion) {
 		//super.onDowngrade(database, oldVersion, newVersion);
 
-		database.execSQL(TimetableContract.getTableCreationCommand(true, DataSchemeVersion.V2));
+		database.execSQL(TimetableContract.getTableCreationCommand(true, DataSchemeVersion.V1));
 		database.execSQL(TimetableContract.insertion());
 		database.execSQL(TimetableContract.deleteTable());
 		database.execSQL(TimetableContract.renameTable());
