@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
+import android.util.Log;
 
 import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
@@ -16,10 +17,10 @@ import static ru.ifmo.droid2016.rzddemo.Constants.LOG_DATE_FORMAT;
 
 /**
  * Кэш расписания поездов.
- *
+ * <p>
  * Ключом является комбинация трех значений:
  * ID станции отправления, ID станции прибытия, дата в москомском часовом поясе
- *
+ * <p>
  * Единицей хранения является список поездов - {@link TimetableEntry}.
  */
 
@@ -36,7 +37,7 @@ public class TimetableCache {
 
     /**
      * Создает экземпляр кэша с указанной версией модели данных.
-     *
+     * <p>
      * Может вызываться на лююбом (в том числе UI потоке). Может быть создано несколько инстансов
      * {@link TimetableCache} -- все они должны потокобезопасно работать с одним физическим кэшом.
      */
@@ -54,9 +55,7 @@ public class TimetableCache {
      * @param fromStationId ID станции отправления
      * @param toStationId   ID станции прибытия
      * @param dateMsk       дата в московском часовом поясе
-     *
      * @return - список {@link TimetableEntry}
-     *
      * @throws FileNotFoundException - если в кэше отсуствуют запрашиваемые данные.
      */
     @WorkerThread
@@ -65,7 +64,15 @@ public class TimetableCache {
                                     @NonNull String toStationId,
                                     @NonNull Calendar dateMsk)
             throws FileNotFoundException {
-        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
+
+        Log.d(TAG, "Get command");
+        SQLHelper database = SQLHelper.getInstance(context, version);
+        List<TimetableEntry> entries = database.getTimetable(fromStationId, toStationId, dateMsk);
+
+        if (!entries.isEmpty()) {
+            return entries;
+        }
+
         throw new FileNotFoundException("No data in timetable cache for: fromStationId="
                 + fromStationId + ", toStationId=" + toStationId
                 + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
@@ -76,6 +83,10 @@ public class TimetableCache {
                     @NonNull String toStationId,
                     @NonNull Calendar dateMsk,
                     @NonNull List<TimetableEntry> timetable) {
-        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
+        Log.d (TAG, "Put");
+        SQLHelper database = SQLHelper.getInstance (context, version);
+               database.putTimetable (dateMsk, timetable);
     }
+
+    private static final String TAG = TimetableCache.class.getSimpleName();
 }
