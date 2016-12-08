@@ -11,6 +11,7 @@ public final class Constants {
     public static final String TAG = "RZDDemo";
 
     public static final SimpleDateFormat LOG_DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
+    public static final SimpleDateFormat LOG_TIME_FORMAT = new SimpleDateFormat("HH:mm");
 
     public static final String DEMO_FROM_STATION_ID = "2004000";
     public static final String DEMO_FROM_STATION_NAME = "САНКТ-ПЕТЕРБУРГ";
