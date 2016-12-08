@@ -90,7 +90,7 @@ public class TimetableCache {
                     Calendar calendar1 = Calendar.getInstance();
                     calendar1.setTimeInMillis(cursor.getLong(6));
                     Calendar calendar2 = Calendar.getInstance();
-                    calendar1.setTimeInMillis(cursor.getLong(9));
+                    calendar2.setTimeInMillis(cursor.getLong(9));
                     TimetableEntry timetableEntry = new TimetableEntry(
                             cursor.getString(4),
                             cursor.getString(5),
