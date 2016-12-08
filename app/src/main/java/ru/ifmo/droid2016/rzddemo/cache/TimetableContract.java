@@ -47,7 +47,7 @@ public class TimetableContract {
                 + ROUTE_START_STATION_NAME + ", "
                 + ROUTE_END_STATION_NAME;
 
-        static final String[] NAME_OF_ARGUMENTS_V1= {DEPARTURE_STATION_ID,
+        static final String[] NAME_OF_ARGUMENTS_V1 = {DEPARTURE_STATION_ID,
                 DEPATURE_STATION_NAME,
                 DEPATURE_TIME,
                 ARRIVAL_STATION_ID,
@@ -57,7 +57,7 @@ public class TimetableContract {
                 ROUTE_START_STATION_NAME,
                 ROUTE_END_STATION_NAME};
 
-        static final String[] NAME_OF_ARGUMENTS_V2= {DEPARTURE_STATION_ID,
+        static final String[] NAME_OF_ARGUMENTS_V2 = {DEPARTURE_STATION_ID,
                 DEPATURE_STATION_NAME,
                 DEPATURE_TIME,
                 ARRIVAL_STATION_ID,

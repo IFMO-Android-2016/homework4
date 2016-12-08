@@ -22,6 +22,8 @@ public class TimetableDBHelper extends SQLiteOpenHelper {
 
     private static volatile TimetableDBHelper instance;
 
+    private final Context context;
+
     public static TimetableDBHelper getInstance(Context context, @DataSchemeVersion int version) {
         if (instance == null) {
             synchronized (TimetableDBHelper.class) {
@@ -32,8 +34,6 @@ public class TimetableDBHelper extends SQLiteOpenHelper {
         }
         return instance;
     }
-
-    private final Context context;
 
     public TimetableDBHelper(Context context, @DataSchemeVersion int version) {
         super(context, DB_FILE_NAME, null /*factory*/, version,
@@ -65,7 +65,7 @@ public class TimetableDBHelper extends SQLiteOpenHelper {
         Log.d(LOG_TAG, "onDowngrade: oldVersion=" + oldVersion + " newVersion=" + newVersion);
 
         String SWAP_TABLE = TimetableContract.Timetable.TABLE + "_swap";
-        db.execSQL("ALTERE TABLE " + TimetableContract.Timetable.TABLE + " RENAME TO " + SWAP_TABLE);
+        db.execSQL("ALTER TABLE " + TimetableContract.Timetable.TABLE + " RENAME TO " + SWAP_TABLE);
         db.execSQL(TimetableContract.Timetable.CREATE_TABLE_V1);
         db.execSQL("INSERT INTO " + TimetableContract.Timetable.TABLE + "(" +
                 TimetableContract.Timetable.ARGUMENTS_ON_CREATE_TABLE + ") SELECT " +

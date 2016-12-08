@@ -116,7 +116,6 @@ public class TimetableCache {
                             routeEndStationName);
                     timetable.add(entry);
                 }
-                return timetable;
             } else {
                 throw new FileNotFoundException("No data in timetable cache for: fromStationId="
                         + fromStationId + ", toStationId=" + toStationId
@@ -126,12 +125,12 @@ public class TimetableCache {
             if (cursor != null) {
                 cursor.close();
             }
-            db.close();
         }
+        return timetable;
     }
 
     private long getDate(@NonNull Calendar dateMsk) {
-        return dateMsk.get(Calendar.DAY_OF_YEAR) + dateMsk.get(Calendar.YEAR) * 500;
+        return dateMsk.get(Calendar.DAY_OF_YEAR) + dateMsk.get(Calendar.YEAR) * 1000;
     }
 
     private Calendar getTime(long dateMsk) {
@@ -149,16 +148,7 @@ public class TimetableCache {
         SQLiteDatabase db = TimetableDBHelper.getInstance(context, version).getWritableDatabase();
         db.beginTransaction();
         String toInsert = "INSERT INTO " + TimetableContract.Timetable.TABLE + " ("
-                + TimetableContract.Timetable.DEPARTURE_DATE + ", "
-                + TimetableContract.Timetable.DEPARTURE_STATION_ID + ", "
-                + TimetableContract.Timetable.DEPATURE_STATION_NAME + ", "
-                + TimetableContract.Timetable.DEPATURE_TIME + ", "
-                + TimetableContract.Timetable.ARRIVAL_STATION_ID + ", "
-                + TimetableContract.Timetable.ARRIVAL_STATION_NAME + ", "
-                + TimetableContract.Timetable.ARRIVAL_TIME + ", "
-                + TimetableContract.Timetable.TRAIN_ROUTE_ID + ", "
-                + TimetableContract.Timetable.ROUTE_START_STATION_NAME + ", "
-                + TimetableContract.Timetable.ROUTE_END_STATION_NAME;
+                + TimetableContract.Timetable.ARGUMENTS_ON_CREATE_TABLE;
         if (version == DataSchemeVersion.V1) {
             toInsert += ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         } else {
@@ -193,13 +183,13 @@ public class TimetableCache {
             }
             db.setTransactionSuccessful();
         } finally {
+            db.endTransaction();
             if (insert != null) {
                 try {
                     insert.close();
                 } catch (Exception ignored) {
                 }
             }
-            db.endTransaction();
         }
         db.close();
     }
