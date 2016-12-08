@@ -38,13 +38,13 @@ public class MyDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Log.e(TAG, "onCreate: ctreated " + CREATE_TABLE1 );
+        Log.e(TAG, "onCreate: " + DB_VERSION + "|" + CREATE_TABLE1 );
         db.execSQL(DB_VERSION == DataSchemeVersion.V1 ? CREATE_TABLE1 : CREATE_TABLE2);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.d(TAG, "ALTER TABLE "
+        Log.e(TAG, "ALTER TABLE "
                 + Caches.TABLE_NAME
                 + " ADD COLUMN " + TRAIN_NAME + " TEXT;");
         db.execSQL("ALTER TABLE "
@@ -54,11 +54,11 @@ public class MyDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.d(TAG, "ONDOWNGRADE :" + " OLVERSION " + oldVersion + " NEWVERSION " + newVersion);
+        Log.e(TAG, "ONDOWNGRADE :" + " OLVERSION " + oldVersion + " NEWVERSION " + newVersion);
         final String TEMP = TABLE_NAME + "_downgrade";
         db.execSQL("ALTER TABLE " + TABLE_NAME + " RENAME TO " + TEMP);
         db.execSQL(CREATE_TABLE1);
-        String columns = DEPARTURE_TIME + ", ";
+        String columns = DATE_MSK + ", ";
         for (int i = 0; i < ARGS1.length; i++) {
             columns += ARGS1[i];
             if (i != ARGS1.length - 1) {
