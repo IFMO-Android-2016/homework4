@@ -58,9 +58,9 @@ public class Helper  extends SQLiteOpenHelper {
         db.execSQL(Contract.Timetable.CREATE_TABLE_V1);
         String allColumns = Contract.Timetable.DEPARTURE_DATE + ", ";
         for (int i = 0; i < Contract.Timetable.V1.length; i++) {
-            allColumns += Contract.Timetable.V1[i];
+            allColumns = allColumns.concat(Contract.Timetable.V1[i]);
             if (i != Contract.Timetable.V1.length - 1) {
-                allColumns += ", ";
+                allColumns = allColumns.concat(", ");
             }
         }
         db.execSQL("INSERT INTO " + Contract.Timetable.TABLE + " (" + allColumns + ") SELECT " + allColumns + " FROM " + tempName);
