@@ -39,8 +39,8 @@ public class TimetableSQLHelper extends SQLiteOpenHelper {
     @DataSchemeVersion
     private final int version;
 
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.CANADA);
-    private SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.CANADA);
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd", Locale.US);
+    private SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z", Locale.US);
 
     private TimetableSQLHelper(Context context, @DataSchemeVersion int version) {
         super(context, TimetableContract.DATABASE_NAME, null, version);
@@ -50,20 +50,9 @@ public class TimetableSQLHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         final String CREATE_TABLE = "CREATE TABLE " + TimetableContract.Timetable.TABLE_NAME + " (" +
-                TimetableContract.Timetable._ID + " INTEGER PRIMARY KEY, " +
-                TimetableContract.Timetable.KEY_DATE + " TEXT, " +
-                TimetableContract.Timetable.KEY_DEPARTURE_STATION_ID + " TEXT, " +
-                TimetableContract.Timetable.KEY_DEPARTURE_STATION_NAME + " TEXT, " +
-                TimetableContract.Timetable.KEY_DEPARTURE_TIME + " TEXT, " +
-                TimetableContract.Timetable.KEY_ARRIVAL_STATION_ID + " TEXT, " +
-                TimetableContract.Timetable.KEY_ARRIVAL_STATION_NAME + " TEXT, " +
-                TimetableContract.Timetable.KEY_ARRIVAL_TIME + " TEXT, " +
-                TimetableContract.Timetable.KEY_TRAIN_ROUTE_ID + " TEXT, " +
-                (version == DataSchemeVersion.V2
-                        ? TimetableContract.Timetable.KEY_TRAIN_NAME + " TEXT, "
-                        : "") +
-                TimetableContract.Timetable.KEY_ROUTE_START_STATION_NAME + " TEXT, " +
-                TimetableContract.Timetable.KEY_ROUTE_END_STATION_NAME + " TEXT)";
+                TextUtils.join(" TEXT, ", version == DataSchemeVersion.V2
+                        ? TimetableContract.Timetable.COLUMNS_V2
+                        : TimetableContract.Timetable.COLUMNS_V1) + " TEXT)";
 
         db.execSQL(CREATE_TABLE);
     }
@@ -83,7 +72,7 @@ public class TimetableSQLHelper extends SQLiteOpenHelper {
 
         onCreate(db);
 
-        String columns = TextUtils.join(",", version == DataSchemeVersion.V2
+        final String columns = TextUtils.join(",", version == DataSchemeVersion.V2
                 ? TimetableContract.Timetable.COLUMNS_V2
                 : TimetableContract.Timetable.COLUMNS_V1);
 
@@ -93,10 +82,10 @@ public class TimetableSQLHelper extends SQLiteOpenHelper {
     }
 
 
-    private Calendar parseCalendar(String iso) throws ParseException {
+    private Calendar parseCalendar(String date) throws ParseException {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeZone(TimeUtils.getMskTimeZone());
-        calendar.setTime(dateTimeFormat.parse(iso));
+        calendar.setTime(dateTimeFormat.parse(date));
         return calendar;
     }
 
@@ -126,7 +115,7 @@ public class TimetableSQLHelper extends SQLiteOpenHelper {
                 for (; !cursor.isAfterLast(); cursor.moveToNext()) {
                     TimetableEntry entry;
                     try {
-                        int i = 1; // Skip date
+                        int i = 1;
                         entry = new TimetableEntry(
                                 cursor.getString(i++),
                                 cursor.getString(i++),
@@ -135,7 +124,7 @@ public class TimetableSQLHelper extends SQLiteOpenHelper {
                                 cursor.getString(i++),
                                 parseCalendar(cursor.getString(i++)),
                                 cursor.getString(i++),
-                                ((version == DataSchemeVersion.V2) ? cursor.getString(i++) : null),
+                                (version == DataSchemeVersion.V2 ? cursor.getString(i++) : null),
                                 cursor.getString(i++),
                                 cursor.getString(i)
                         );
@@ -161,8 +150,8 @@ public class TimetableSQLHelper extends SQLiteOpenHelper {
         final String INSERT_QUERY = "INSERT INTO " + TimetableContract.Timetable.TABLE_NAME + "(" +
                 TextUtils.join(", ", version == DataSchemeVersion.V2
                         ? TimetableContract.Timetable.COLUMNS_V2
-                        : TimetableContract.Timetable.COLUMNS_V1) + ") " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
+                        : TimetableContract.Timetable.COLUMNS_V1) +
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?" +
                 (version == DataSchemeVersion.V2 ? ", ?" : "") + ")";
 
         SQLiteDatabase db = getWritableDatabase();
@@ -171,32 +160,32 @@ public class TimetableSQLHelper extends SQLiteOpenHelper {
             SQLiteStatement prepared = db.compileStatement(INSERT_QUERY);
             db.beginTransaction();
 
-            for (TimetableEntry record : timetable) {
-                int key = 1;
-                prepared.bindString(key++, dateFormat.format(dateMsk.getTime()));
-                prepared.bindString(key++, record.departureStationId);
-                prepared.bindString(key++, record.departureStationName);
-                prepared.bindString(key++, dateTimeFormat.format(record.departureTime.getTime()));
-                prepared.bindString(key++, record.arrivalStationId);
-                prepared.bindString(key++, record.arrivalStationName);
-                prepared.bindString(key++, dateTimeFormat.format(record.arrivalTime.getTime()));
-                prepared.bindString(key++, record.trainRouteId);
+            for (TimetableEntry entry : timetable) {
+                int i = 1;
+                prepared.bindString(i++, dateFormat.format(dateMsk.getTime()));
+                prepared.bindString(i++, entry.departureStationId);
+                prepared.bindString(i++, entry.departureStationName);
+                prepared.bindString(i++, dateTimeFormat.format(entry.departureTime.getTime()));
+                prepared.bindString(i++, entry.arrivalStationId);
+                prepared.bindString(i++, entry.arrivalStationName);
+                prepared.bindString(i++, dateTimeFormat.format(entry.arrivalTime.getTime()));
+                prepared.bindString(i++, entry.trainRouteId);
                 if (version == DataSchemeVersion.V2) {
-                    if (record.trainName == null) {
-                        prepared.bindNull(key++);
+                    if (entry.trainName == null) {
+                        prepared.bindNull(i++);
                     } else {
-                        prepared.bindString(key++, record.trainName);
+                        prepared.bindString(i++, entry.trainName);
                     }
                 }
-                prepared.bindString(key++, record.routeStartStationName);
-                prepared.bindString(key, record.routeEndStationName);
+                prepared.bindString(i++, entry.routeStartStationName);
+                prepared.bindString(i, entry.routeEndStationName);
                 prepared.executeInsert();
                 prepared.clearBindings();
             }
 
             db.setTransactionSuccessful();
         } catch (Exception e) {
-            Log.d(TAG, "Error while trying to add record to database");
+            Log.d(TAG, "Error while trying to add entries to database");
         } finally {
             db.endTransaction();
         }
@@ -251,7 +240,6 @@ public class TimetableSQLHelper extends SQLiteOpenHelper {
             };
         }
 
-        private TimetableContract() {
-        }
+        private TimetableContract() {}
     }
 }
