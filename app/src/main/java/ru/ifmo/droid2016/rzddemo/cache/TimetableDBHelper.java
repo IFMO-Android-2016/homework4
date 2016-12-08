@@ -17,6 +17,7 @@ public class TimetableDBHelper extends SQLiteOpenHelper {
 
     private static final String DB_FILE_NAME = "timetable.db";
 
+    @DataSchemeVersion
     private final int DB_VERSION;
 
     private static volatile TimetableDBHelper instance;
@@ -43,38 +44,34 @@ public class TimetableDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Log.d(LOG_TAG, "onCreate: " + TimetableContract.Cities.CREATE_TABLE);
-        db.execSQL(TimetableContract.Cities.CREATE_TABLE);
+        if (DB_VERSION == DataSchemeVersion.V1) {
+            Log.d(LOG_TAG, "onCreate: " + TimetableContract.Timetable.CREATE_TABLE_V1);
+            db.execSQL(TimetableContract.Timetable.CREATE_TABLE_V1);
+        } else {
+            Log.d(LOG_TAG, "onCreate: " + TimetableContract.Timetable.CREATE_TABLE_V2);
+            db.execSQL(TimetableContract.Timetable.CREATE_TABLE_V2);
+        }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.d(LOG_TAG, "onUpgrade: oldVersion=" + oldVersion + " newVersion=" + newVersion);
 
-        //TODO добавить новую колонку в табличку
+        db.execSQL("ALTER TABLE " + TimetableContract.Timetable.TABLE + " ADD COLUMN " + TimetableContract.Timetable.TRAIN_NAME +  " TEXT");
     }
 
-    //TODO make downgrade
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.d(LOG_TAG, "onDowngrade: oldVersion=" + oldVersion + " newVersion=" + newVersion);
 
-    public void dropDb() {
-        SQLiteDatabase db = getWritableDatabase();
-        if (db.isOpen()) {
-            try {
-                db.close();
-            } catch (Exception e) {
-                Log.w(LOG_TAG, "Failed to close DB");
-            }
-        }
-        final File dbFile = context.getDatabasePath(DB_FILE_NAME);
-        try {
-            Log.d(LOG_TAG, "deleting the database file: " + dbFile.getPath());
-            if (!dbFile.delete()) {
-                Log.w(LOG_TAG, "Failed to delete database file: " + dbFile);
-            }
-            Log.d(LOG_TAG, "Deleted DB file: " + dbFile);
-        } catch (Exception e) {
-            Log.w(LOG_TAG, "Failed to delete database file: " + dbFile, e);
-        }
+        String SWAP_TABLE = TimetableContract.Timetable.TABLE + "_swap";
+        db.execSQL("ALTERE TABLE " + TimetableContract.Timetable.TABLE + " RENAME TO " + SWAP_TABLE);
+        db.execSQL(TimetableContract.Timetable.CREATE_TABLE_V1);
+        db.execSQL("INSERT INTO " + TimetableContract.Timetable.TABLE + "(" +
+                TimetableContract.Timetable.ARGUMENTS_ON_CREATE_TABLE + ") SELECT " +
+                TimetableContract.Timetable.ARGUMENTS_ON_CREATE_TABLE + " FROM " + SWAP_TABLE);
+
+        db.execSQL("DROP TABLE " + SWAP_TABLE);
     }
 
     private static final String LOG_TAG = "TimetableDB";
