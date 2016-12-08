@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 
 import java.io.FileNotFoundException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -130,18 +131,23 @@ public class TimetableCache {
                 do {
                     int temp = 0;
                     TimetableEntry entry;
+                    try {
                         entry = new TimetableEntry(
                                 cursor.getString(temp++),
                                 cursor.getString(temp++),
-                                getCalendar(cursor.getLong(temp++)),//calendar1,
+                                getCalendar(cursor.getString(temp++)),//calendar1,
                                 cursor.getString(temp++),
                                 cursor.getString(temp++),
-                                getCalendar(cursor.getLong(temp++)),//calendar2,
+                                getCalendar(cursor.getString(temp++)),//calendar2,
                                 cursor.getString(temp++),
                                 ((version == DataSchemeVersion.V2) ? cursor.getString(temp++) : null),
                                 cursor.getString(temp++),
                                 cursor.getString(temp)
                         );
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
                     timetable.add(entry);
                 } while (cursor.moveToNext());
 
@@ -159,9 +165,9 @@ public class TimetableCache {
         }
     }
 
-    private Calendar getCalendar(long aLong) {
+    private Calendar getCalendar(String str) throws ParseException {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(aLong);
+        calendar.setTime(schemaDateTime.parse(str));
         return calendar;
     }
 
