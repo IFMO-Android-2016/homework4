@@ -132,7 +132,6 @@ public class TimetableCache {
                         + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
             }
         } catch (SQLiteException e) {
-            Log.wtf(TAG, "Query error: ", e);
             throw new FileNotFoundException("No data in timetable cache for: fromStationId="
                     + fromStationId + ", toStationId=" + toStationId
                     + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
