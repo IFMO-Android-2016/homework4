@@ -12,7 +12,6 @@ import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
-
 import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
 import ru.ifmo.droid2016.rzddemo.api.ApiResponseParser;
 import ru.ifmo.droid2016.rzddemo.api.RZDApi;
