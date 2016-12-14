@@ -1,6 +1,5 @@
 package ru.ifmo.droid2016.rzddemo.cache;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -15,7 +14,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import android.util.Log;
-import ru.ifmo.droid2016.rzddemo.DBHelper;
 import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
 
 import static ru.ifmo.droid2016.rzddemo.Constants.LOG_DATE_FORMAT;
@@ -77,14 +75,22 @@ public class TimetableCache {
         final SQLiteDatabase db = helper.getReadableDatabase();
         List<TimetableEntry> timetableEntryList = new LinkedList<>();
         Cursor c = null;
+        long day = DBHelper.currentDay(dateMsk);
+        Log.wtf("RZDDBG", Long.toString(day));
         db.beginTransaction();
         try {
-            c = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_NAME + " WHERE " + DBHelper.DEPARTURE_STATION_ID + " = " + fromStationId + " AND " + DBHelper.ARRIVAL_STATION_ID + " AND " + DBHelper.DEPARTURE_TIME + " > " + dateMsk.getTimeInMillis() + " AND " + DBHelper.DEPARTURE_TIME + " < " + Long.toString(dateMsk.getTimeInMillis() + TimeUnit.DAYS.toMillis(1)), new String[0]);
+            c = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_NAME + " WHERE " +
+                    DBHelper.DEPARTURE_STATION_ID + " = " + fromStationId + " AND " +
+                    DBHelper.ARRIVAL_STATION_ID + " = " + toStationId + " AND " +
+                    DBHelper.DAY + " = " + day, new String[0]);
             int ciDep = c.getColumnIndex(DBHelper.DEPARTURE_TIME);
             int ciArr = c.getColumnIndex(DBHelper.ARRIVAL_TIME);
-            Log.d("RZDDB", String.valueOf(c.getColumnCount()));
-            Log.d("RZDDB", String.valueOf(ciDep));
-            Log.d("RZDDB", DBHelper.DEPARTURE_TIME);
+            int ciDSN = c.getColumnIndex(DBHelper.DEPARTURE_STATION_NAME);
+            int ciASN = c.getColumnIndex(DBHelper.ARRIVAL_STATION_NAME);
+            int ciTRI = c.getColumnIndex(DBHelper.TRAIN_ROUTE_ID);
+            int ciTI  = c.getColumnIndex(DBHelper.TRAIN_NAME);
+            int ciRSN = c.getColumnIndex(DBHelper.ROUTE_START_STATION_NAME);
+            int ciREN = c.getColumnIndex(DBHelper.ROUTE_END_STATION_NAME);
             Log.d("RZDDB", String.valueOf(c.getPosition()));
             Log.d("RZDDB", String.valueOf(c.getCount()));
             for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
@@ -96,15 +102,15 @@ public class TimetableCache {
                 arrTime.setTimeInMillis(c.getLong(ciArr));
                 timetableEntryList.add(new TimetableEntry(
                         fromStationId,
-                        c.getString(c.getColumnIndex(DBHelper.DEPARTURE_STATION_NAME)),
+                        c.getString(ciDSN),
                         depTime,
                         toStationId,
-                        c.getString(c.getColumnIndex(DBHelper.ARRIVAL_STATION_NAME)),
+                        c.getString(ciASN),
                         arrTime,
-                        c.getString(c.getColumnIndex(DBHelper.TRAIN_ROUTE_ID)),
-                        (version == DataSchemeVersion.V2 ? c.getString(c.getColumnIndex(DBHelper.TRAIN_NAME)) : null),
-                        c.getString(c.getColumnIndex(DBHelper.ROUTE_START_STATION_NAME)),
-                        c.getString(c.getColumnIndex(DBHelper.ROUTE_END_STATION_NAME))));
+                        c.getString(ciTRI),
+                        (version == DataSchemeVersion.V2 ? c.getString(ciTI) : null),
+                        c.getString(ciRSN),
+                        c.getString(ciREN)));
             }
             db.setTransactionSuccessful();
         } catch (Throwable e) {
@@ -126,11 +132,14 @@ public class TimetableCache {
                     @NonNull Calendar dateMsk,
                     @NonNull List<TimetableEntry> timetable) {
         SQLiteDatabase db = DBHelper.getOrCreateInstance(context, version).getWritableDatabase();
+        long day = DBHelper.currentDay(dateMsk);
         db.beginTransaction();
+        Log.wtf("RZDDBP", Long.toString(day));
         try {
             if (insertStatement == null) insertStatement = db.compileStatement("insert into "
                     + DBHelper.TABLE_NAME
                     + " ("
+                    + DBHelper.DAY + ", "
                     + DBHelper.DEPARTURE_STATION_ID + ", "
                     + DBHelper.DEPARTURE_STATION_NAME + ", "
                     + DBHelper.DEPARTURE_TIME + ", "
@@ -141,23 +150,32 @@ public class TimetableCache {
                     + DBHelper.ROUTE_START_STATION_NAME + ", "
                     + DBHelper.ROUTE_END_STATION_NAME
                     + (version == DataSchemeVersion.V2 ? ", " + DBHelper.TRAIN_NAME : "") + ")"
-                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?" + (version == DataSchemeVersion.V2 ? ", ?)" : ")"));
-            insertStatement.bindString(1, fromStationId);
-            insertStatement.bindString(4, toStationId);
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?" + (version == DataSchemeVersion.V2 ? ", ?)" : ")"));
+            insertStatement.bindLong(1, day);
+            insertStatement.bindString(2, fromStationId);
+            insertStatement.bindString(5, toStationId);
+            Log.d("RZDDBV", String.valueOf(version));
             for (TimetableEntry e : timetable) {
-                insertStatement.bindString(2, e.departureStationName);
-                insertStatement.bindLong(3, e.departureTime.getTimeInMillis());
-                insertStatement.bindString(5, e.arrivalStationName);
-                insertStatement.bindLong(6, e.arrivalTime.getTimeInMillis());
-                insertStatement.bindString(7, e.trainRouteId);
-                insertStatement.bindString(8, e.routeStartStationName);
-                insertStatement.bindString(9, e.routeEndStationName);
-                if (version == DataSchemeVersion.V2) insertStatement.bindString(10, e.trainName);
+                insertStatement.bindString(3, e.departureStationName);
+                insertStatement.bindLong(4, e.departureTime.getTimeInMillis());
+                insertStatement.bindString(6, e.arrivalStationName);
+                insertStatement.bindLong(7, e.arrivalTime.getTimeInMillis());
+                insertStatement.bindString(8, e.trainRouteId);
+                insertStatement.bindString(9, e.routeStartStationName);
+                insertStatement.bindString(10, e.routeEndStationName);
+                if (version == DataSchemeVersion.V2) {
+                    if (e.trainName == null) {
+                        insertStatement.bindNull(11);
+                    } else {
+                        insertStatement.bindString(11, e.trainName);
+                    }
+                }
                 insertStatement.executeInsert();
             }
             insertStatement.clearBindings();
             db.setTransactionSuccessful();
         } catch (Throwable e) {
+            Log.d("RZDDB", e.getMessage());
             e.printStackTrace();
         } finally {
             db.endTransaction();

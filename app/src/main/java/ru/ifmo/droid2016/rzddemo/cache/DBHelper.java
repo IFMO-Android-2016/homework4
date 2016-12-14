@@ -1,4 +1,4 @@
-package ru.ifmo.droid2016.rzddemo;
+package ru.ifmo.droid2016.rzddemo.cache;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,8 +9,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import ru.ifmo.droid2016.rzddemo.cache.DataSchemeVersion;
 
+import java.util.Calendar;
 import java.util.HashMap;
 
 /**
@@ -28,6 +28,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TRAIN_NAME = "TRAINNAME";
     public static final String ROUTE_START_STATION_NAME = "ROUTESTARTSTNAME";
     public static final String ROUTE_END_STATION_NAME = "ROUTEENDSTNAME";
+    public static final String DAY = "DAY";
     public static final HashMap<Integer, DBHelper> instances = new HashMap<>(2);
 
     @Nullable
@@ -80,38 +81,46 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (oldVersion == newVersion) return;
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (newVersion != 1) throw new RuntimeException("Wrong DB version: " + newVersion);
         db.beginTransaction();
         try {
-            if (newVersion == 1) {
-                db.execSQL("ALTER TABLE " + TABLE_NAME + " RENAME TO TMP");
-                createTable(db, 1);
-                Cursor c = null;
-                try {
-                    c = db.rawQuery("SELECT * FROM TMP", new String[0]);
-                    for (int i = 0; i < c.getCount(); ++i) {
-                        ContentValues cv = new ContentValues(c.getColumnCount());
-                        cv.put(DEPARTURE_STATION_ID, c.getLong(c.getColumnIndex(DEPARTURE_STATION_ID)));
-                        cv.put(DEPARTURE_STATION_NAME, c.getString(c.getColumnIndex(DEPARTURE_STATION_NAME)));
-                        cv.put(DEPARTURE_TIME, c.getString(c.getColumnIndex(DEPARTURE_TIME)));
-                        cv.put(ARRIVAL_STATION_ID, c.getLong(c.getColumnIndex(ARRIVAL_STATION_ID)));
-                        cv.put(ARRIVAL_STATION_NAME, c.getString(c.getColumnIndex(ARRIVAL_STATION_NAME)));
-                        cv.put(ARRIVAL_TIME, c.getString(c.getColumnIndex(ARRIVAL_TIME)));
-                        cv.put(TRAIN_ROUTE_ID, c.getLong(c.getColumnIndex(TRAIN_ROUTE_ID)));
-                        cv.put(ROUTE_START_STATION_NAME, c.getString(c.getColumnIndex(ROUTE_START_STATION_NAME)));
-                        cv.put(ROUTE_END_STATION_NAME, c.getString(c.getColumnIndex(ROUTE_END_STATION_NAME)));
-                        db.insert(TABLE_NAME, null, cv); // TODO: 07.12.16 replace with SQLiteStatement
-                    }
-                } finally {
-                    if (c != null) c.close();
+            db.execSQL("ALTER TABLE " + TABLE_NAME + " RENAME TO TMP");
+            createTable(db, 1);
+            Cursor c = null;
+            try {
+                c = db.rawQuery("SELECT * FROM TMP", new String[0]);
+                for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+                    ContentValues cv = new ContentValues(c.getColumnCount());
+                    cv.put(DAY, c.getLong(c.getColumnIndex(DAY)));
+                    cv.put(DEPARTURE_STATION_ID, c.getLong(c.getColumnIndex(DEPARTURE_STATION_ID)));
+                    cv.put(DEPARTURE_STATION_NAME, c.getString(c.getColumnIndex(DEPARTURE_STATION_NAME)));
+                    cv.put(DEPARTURE_TIME, c.getString(c.getColumnIndex(DEPARTURE_TIME)));
+                    cv.put(ARRIVAL_STATION_ID, c.getLong(c.getColumnIndex(ARRIVAL_STATION_ID)));
+                    cv.put(ARRIVAL_STATION_NAME, c.getString(c.getColumnIndex(ARRIVAL_STATION_NAME)));
+                    cv.put(ARRIVAL_TIME, c.getString(c.getColumnIndex(ARRIVAL_TIME)));
+                    cv.put(TRAIN_ROUTE_ID, c.getLong(c.getColumnIndex(TRAIN_ROUTE_ID)));
+                    cv.put(ROUTE_START_STATION_NAME, c.getString(c.getColumnIndex(ROUTE_START_STATION_NAME)));
+                    cv.put(ROUTE_END_STATION_NAME, c.getString(c.getColumnIndex(ROUTE_END_STATION_NAME)));
+                    db.insert(TABLE_NAME, null, cv);
                 }
-                db.setTransactionSuccessful();
-            } else {
-                if (newVersion != 2) throw new RuntimeException("Wrong DB version: " + newVersion);
-                db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + TRAIN_NAME + " TEXT;");
-                db.setTransactionSuccessful();
+            } finally {
+                if (c != null) c.close();
             }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion == newVersion) return;
+        if (newVersion != 2) throw new RuntimeException("Wrong DB version: " + newVersion);
+        db.beginTransaction();
+        try {
+            db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + TRAIN_NAME + " TEXT;");
+            db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
         }
@@ -129,6 +138,11 @@ public class DBHelper extends SQLiteOpenHelper {
                 + TRAIN_ROUTE_ID + " INTEGER, "
                 + (version == 2 ? TRAIN_NAME + " TEXT, " : "")
                 + ROUTE_START_STATION_NAME + " TEXT, "
-                + ROUTE_END_STATION_NAME + " TEXT);");
+                + ROUTE_END_STATION_NAME + " TEXT, "
+                + DAY + " INTEGER);");
+    }
+
+    static long currentDay(Calendar calendar) {
+        return calendar.get(Calendar.DAY_OF_YEAR) + calendar.get(Calendar.YEAR) * 366;
     }
 }
