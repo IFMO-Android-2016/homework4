@@ -70,37 +70,50 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        createTable(db, db.getVersion());
+        db.beginTransaction();
+        try {
+            createTable(db, db.getVersion());
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion == newVersion) return;
-        if (newVersion == 1) {
-            db.execSQL("ALTER TABLE " + TABLE_NAME + " RENAME TO TMP");
-            createTable(db, 1);
-            Cursor c = null;
-            try {
-                c = db.rawQuery("SELECT * FROM TMP", new String[0]);
-                for (int i = 0; i < c.getCount(); ++i) {
-                    ContentValues cv = new ContentValues(c.getColumnCount());
-                    cv.put(DEPARTURE_STATION_ID, c.getLong(c.getColumnIndex(DEPARTURE_STATION_ID)));
-                    cv.put(DEPARTURE_STATION_NAME, c.getString(c.getColumnIndex(DEPARTURE_STATION_NAME)));
-                    cv.put(DEPARTURE_TIME, c.getString(c.getColumnIndex(DEPARTURE_TIME)));
-                    cv.put(ARRIVAL_STATION_ID, c.getLong(c.getColumnIndex(ARRIVAL_STATION_ID)));
-                    cv.put(ARRIVAL_STATION_NAME, c.getString(c.getColumnIndex(ARRIVAL_STATION_NAME)));
-                    cv.put(ARRIVAL_TIME, c.getString(c.getColumnIndex(ARRIVAL_TIME)));
-                    cv.put(TRAIN_ROUTE_ID, c.getLong(c.getColumnIndex(TRAIN_ROUTE_ID)));
-                    cv.put(ROUTE_START_STATION_NAME, c.getString(c.getColumnIndex(ROUTE_START_STATION_NAME)));
-                    cv.put(ROUTE_END_STATION_NAME, c.getString(c.getColumnIndex(ROUTE_END_STATION_NAME)));
-                    db.insert(TABLE_NAME, null, cv); // TODO: 07.12.16 replace with SQLiteStatement
+        db.beginTransaction();
+        try {
+            if (newVersion == 1) {
+                db.execSQL("ALTER TABLE " + TABLE_NAME + " RENAME TO TMP");
+                createTable(db, 1);
+                Cursor c = null;
+                try {
+                    c = db.rawQuery("SELECT * FROM TMP", new String[0]);
+                    for (int i = 0; i < c.getCount(); ++i) {
+                        ContentValues cv = new ContentValues(c.getColumnCount());
+                        cv.put(DEPARTURE_STATION_ID, c.getLong(c.getColumnIndex(DEPARTURE_STATION_ID)));
+                        cv.put(DEPARTURE_STATION_NAME, c.getString(c.getColumnIndex(DEPARTURE_STATION_NAME)));
+                        cv.put(DEPARTURE_TIME, c.getString(c.getColumnIndex(DEPARTURE_TIME)));
+                        cv.put(ARRIVAL_STATION_ID, c.getLong(c.getColumnIndex(ARRIVAL_STATION_ID)));
+                        cv.put(ARRIVAL_STATION_NAME, c.getString(c.getColumnIndex(ARRIVAL_STATION_NAME)));
+                        cv.put(ARRIVAL_TIME, c.getString(c.getColumnIndex(ARRIVAL_TIME)));
+                        cv.put(TRAIN_ROUTE_ID, c.getLong(c.getColumnIndex(TRAIN_ROUTE_ID)));
+                        cv.put(ROUTE_START_STATION_NAME, c.getString(c.getColumnIndex(ROUTE_START_STATION_NAME)));
+                        cv.put(ROUTE_END_STATION_NAME, c.getString(c.getColumnIndex(ROUTE_END_STATION_NAME)));
+                        db.insert(TABLE_NAME, null, cv); // TODO: 07.12.16 replace with SQLiteStatement
+                    }
+                } finally {
+                    if (c != null) c.close();
                 }
-            } finally {
-                if (c != null) c.close();
+                db.setTransactionSuccessful();
+            } else {
+                if (newVersion != 2) throw new RuntimeException("Wrong DB version: " + newVersion);
+                db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + TRAIN_NAME + " TEXT;");
+                db.setTransactionSuccessful();
             }
-        } else {
-            if (newVersion != 2) throw new RuntimeException("Wrong DB version: " + newVersion);
-            db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + TRAIN_NAME + " TEXT;");
+        } finally {
+            db.endTransaction();
         }
     }
 
