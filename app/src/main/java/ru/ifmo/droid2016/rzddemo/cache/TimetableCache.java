@@ -65,7 +65,14 @@ public class TimetableCache {
                                     @NonNull String toStationId,
                                     @NonNull Calendar dateMsk)
             throws FileNotFoundException {
-        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
+
+        TimetableSQLHelper db = TimetableSQLHelper.getInstance(context, version);
+        List<TimetableEntry> entries = db.getTimetable(fromStationId, toStationId, dateMsk);
+
+        if (entries.size() > 0) {
+            return entries;
+        }
+
         throw new FileNotFoundException("No data in timetable cache for: fromStationId="
                 + fromStationId + ", toStationId=" + toStationId
                 + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
