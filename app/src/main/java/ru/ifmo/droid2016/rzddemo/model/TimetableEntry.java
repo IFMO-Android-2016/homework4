@@ -10,6 +10,19 @@ import java.util.Calendar;
  */
 public class TimetableEntry {
 
+    public enum Key {
+        DEPARTURE_STATION_ID,
+        DEPARTURE_STATION_NAME,
+        DEPARTURE_TIME,
+        ARRIVAL_STATION_ID,
+        ARRIVAL_STATION_NAME,
+        ARRIVAL_TIME,
+        TRAIN_ROUTE_ID,
+        TRAIN_NAME,
+        ROUTE_START_STATION_NAME,
+        ROUTE_END_STATION_NAME
+    }
+
     /**
      * ID станции отправления.
      */
