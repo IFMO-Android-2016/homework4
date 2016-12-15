@@ -1,18 +1,24 @@
 package ru.ifmo.droid2016.rzddemo.cache;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
+import android.util.Log;
 
 import java.io.FileNotFoundException;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import static ru.ifmo.droid2016.rzddemo.cache.Constraints.*;
 
 import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
 
 import static ru.ifmo.droid2016.rzddemo.Constants.LOG_DATE_FORMAT;
+import static ru.ifmo.droid2016.rzddemo.cache.DataSchemeVersion.*;
 
 /**
  * Кэш расписания поездов.
@@ -65,10 +71,71 @@ public class TimetableCache {
                                     @NonNull String toStationId,
                                     @NonNull Calendar dateMsk)
             throws FileNotFoundException {
-        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
-        throw new FileNotFoundException("No data in timetable cache for: fromStationId="
-                + fromStationId + ", toStationId=" + toStationId
-                + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
+        Log.d(TAG, "get");
+        SQLiteDatabase db = TimetableDbHelper.getInstance(context,version).getReadableDatabase();
+        List<TimetableEntry> result = new ArrayList<>();
+        Cursor cursor = null;
+        String[] toFind;
+        if (version == V1)
+            toFind = new String[] {
+                    DEPARTURE_DATE,
+                    DEPARTURE_STATION_ID,
+                    DEPARTURE_STATION_NAME,
+                    DEPARTURE_TIME,
+                    ARRIVAL_STATION_ID,
+                    ARRIVAL_STATION_NAME,
+                    ARRIVAL_TIME,
+                    TRAIN_ROUTE_ID,
+                    ROUTE_START_STATION_NAME,
+                    ROUTE_END_STATION_NAME
+            };
+        else
+            toFind = new String[] {
+                    DEPARTURE_DATE,
+                    DEPARTURE_STATION_ID,
+                    DEPARTURE_STATION_NAME,
+                    DEPARTURE_TIME,
+                    ARRIVAL_STATION_ID,
+                    ARRIVAL_STATION_NAME,
+                    ARRIVAL_TIME,
+                    TRAIN_ROUTE_ID,
+                    ROUTE_START_STATION_NAME,
+                    ROUTE_END_STATION_NAME,
+                    TRAIN_NAME
+            };
+        try {
+            cursor = db.query(TABLE, toFind,
+                    DEPARTURE_STATION_ID + "=? and " + ARRIVAL_STATION_ID + "=? and " + DEPARTURE_DATE + "=?",
+                    new String[]{fromStationId, toStationId, LOG_DATE_FORMAT.format(dateMsk.getTime()) },
+                    null, null, null);
+            Log.d(TAG, "get: " + fromStationId + " " + toStationId + " " + LOG_DATE_FORMAT.format(dateMsk.getTime()));
+            if (cursor.moveToFirst()) {
+                for (; !cursor.isAfterLast(); cursor.moveToNext()) {
+
+                    Calendar departureTime = Calendar.getInstance(dateMsk.getTimeZone());
+                    departureTime.setTimeInMillis(Long.parseLong(cursor.getString(3)));
+
+                    Calendar arrivalTime = Calendar.getInstance(dateMsk.getTimeZone());
+                    arrivalTime.setTimeInMillis(Long.parseLong(cursor.getString(6)));
+
+                    String trainName = null;
+                    if (version == V2)
+                        trainName = cursor.getString(10);
+                    result.add(new TimetableEntry(cursor.getString(1), cursor.getString(2),
+                            departureTime, cursor.getString(4), cursor.getString(5),
+                            arrivalTime, cursor.getString(7), trainName, cursor.getString(8), cursor.getString(9)));
+                }
+            } else {
+                throw new FileNotFoundException("No data in timetable cache for: fromStationId="
+                        + fromStationId + ", toStationId=" + toStationId
+                        + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+            db.close();
+        }
+        return result;
     }
 
     @WorkerThread
@@ -76,6 +143,19 @@ public class TimetableCache {
                     @NonNull String toStationId,
                     @NonNull Calendar dateMsk,
                     @NonNull List<TimetableEntry> timetable) {
-        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
+        Log.d(TAG, "put");
+
+        SQLiteDatabase db = TimetableDbHelper.getInstance(context, version).getWritableDatabase();
+        String list = listString1;
+        if (version == V2) {
+            list += ", " + TRAIN_NAME;
+        }
+
+        for (TimetableEntry entry : timetable) {
+            String values = "'" + LOG_DATE_FORMAT.format(dateMsk.getTime()) + "', " + entry.toString(version);
+            db.execSQL("INSERT INTO " + TABLE + " (" + list + ")" + " VALUES (" + values + ")");
+        }
     }
+
+    private String TAG = "tag";
 }

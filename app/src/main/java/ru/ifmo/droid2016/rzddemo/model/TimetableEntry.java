@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 
 import java.util.Calendar;
 
+import static ru.ifmo.droid2016.rzddemo.cache.DataSchemeVersion.V2;
+
 /**
  * Элемент расписания движения поездов.
  */
@@ -53,12 +55,6 @@ public class TimetableEntry {
     public final String trainRouteId;
 
     /**
-     * Название поезда.
-     */
-    @Nullable
-    public final String trainName;
-
-    /**
      * Название начальной станции поезда.
      */
     @NonNull
@@ -69,6 +65,12 @@ public class TimetableEntry {
      */
     @NonNull
     public final String routeEndStationName;
+
+    /**
+     * Название поезда.
+     */
+    @Nullable
+    public final String trainName;
 
     public TimetableEntry(@NonNull String departureStationId,
                           @NonNull String departureStationName,
@@ -87,8 +89,20 @@ public class TimetableEntry {
         this.arrivalStationName = arrivalStationName;
         this.arrivalTime = arrivalTime;
         this.trainRouteId = trainRouteId;
-        this.trainName = trainName;
         this.routeStartStationName = routeStartStationName;
         this.routeEndStationName = routeEndStationName;
+        this.trainName = trainName;
+    }
+
+    public String toString(int version) {
+        String ret =  "'" + departureStationId + "', '" + departureStationName
+                + "', '" + departureTime.getTimeInMillis()
+                + "', '" + arrivalStationId + "', '" + arrivalStationName + "', '"
+                + arrivalTime.getTimeInMillis()
+                + "', '" + trainRouteId + "', '" + routeStartStationName + "', '" + routeEndStationName + "'";
+        if (version == V2) {
+            ret += ", '" + trainName + "'";
+        }
+        return ret;
     }
 }
