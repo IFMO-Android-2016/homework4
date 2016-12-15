@@ -4,16 +4,13 @@ import android.content.Context;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteStatement;
 
 import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 
+import ru.ifmo.droid2016.rzddemo.cache.DataBaseHelper;
 import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
 
 import static ru.ifmo.droid2016.rzddemo.Constants.LOG_DATE_FORMAT;
@@ -69,7 +66,12 @@ public class TimetableCache {
                                     @NonNull String toStationId,
                                     @NonNull Calendar dateMsk)
             throws FileNotFoundException {
-        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
+        DataBaseHelper database = DataBaseHelper.getInstance(context, version);
+        List<TimetableEntry> records = database.getTimetable(fromStationId, toStationId, dateMsk);
+
+        if (records.size() == 0) {
+            return records;
+        }
         throw new FileNotFoundException("No data in timetable cache for: fromStationId="
                 + fromStationId + ", toStationId=" + toStationId
                 + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
@@ -80,6 +82,9 @@ public class TimetableCache {
                     @NonNull String toStationId,
                     @NonNull Calendar dateMsk,
                     @NonNull List<TimetableEntry> timetable) {
-        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
+
+        DataBaseHelper database = DataBaseHelper.getInstance (context, version);
+        database.putTimetable (dateMsk, timetable);
     }
+
 }
