@@ -46,9 +46,6 @@ public class TimetableCache {
 
     private static final TimetableEntry.Key[] ALL_COLUMNS = TimetableEntry.Key.values();
 
-    @NonNull
-    private final Context context;
-
     /**
      * Версия модели данных, с которой работает кэщ.
      */
@@ -66,9 +63,8 @@ public class TimetableCache {
     @AnyThread
     public TimetableCache(@NonNull Context context,
                           @DataSchemeVersion int version) {
-        this.context = context.getApplicationContext();
         this.version = version;
-        timetableDatabaseHelper = TimetableDatabaseHelper.getInstance(this.context, version);
+        timetableDatabaseHelper = TimetableDatabaseHelper.getInstance(context.getApplicationContext(), version);
     }
 
     private static Calendar getDateTime(String dateTime) {
@@ -78,7 +74,7 @@ public class TimetableCache {
             calendar = Calendar.getInstance(TimeUtils.getMskTimeZone());
             calendar.setTime(DATE_TIME_FORMAT.parse(dateTime));
         } catch (ParseException e) {
-            Log.e(TAG, "Error occurred while parsing datetime", e);
+            Log.wtf(TAG, "Error occurred while parsing datetime", e);
         }
 
         return calendar;
@@ -214,7 +210,7 @@ public class TimetableCache {
 
     private static class TimetableDatabaseHelper extends SQLiteOpenHelper {
 
-        private static final String CURRENT_DATE = "CURRENT_DATE";
+        private static final String USABLE_DATE = "USABLE_DATE";
 
         private static final String[] COLUMNS_V1;
         private static final String[] COLUMNS_V2;
@@ -302,7 +298,7 @@ public class TimetableCache {
         static {
             COLUMNS_V1 = new String[ALL_COLUMNS.length];
             COLUMNS_V2 = new String[ALL_COLUMNS.length + 1];
-            COLUMNS_V1[0] = COLUMNS_V2[0] = CURRENT_DATE;
+            COLUMNS_V1[0] = COLUMNS_V2[0] = USABLE_DATE;
 
             for (int i = 1, j = 1; i <= ALL_COLUMNS.length; i++) {
                 if (ALL_COLUMNS[i - 1] == TimetableEntry.Key.TRAIN_NAME) {
@@ -322,7 +318,7 @@ public class TimetableCache {
                     " = ? AND " +
                     TimetableEntry.Key.ARRIVAL_STATION_ID.name() +
                     " = ? AND " +
-                    CURRENT_DATE + " = ?";
+                    USABLE_DATE + " = ?";
         }
 
         private static String[] getSelectionArgs(String fromId, String toId, Calendar date) {
