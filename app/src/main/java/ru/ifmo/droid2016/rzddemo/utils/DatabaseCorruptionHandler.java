@@ -9,9 +9,6 @@ import android.util.Log;
 
 import java.io.File;
 
-/**
- * Modified by ivantrofimov on 07.12.2016
- */
 
 public class DatabaseCorruptionHandler implements DatabaseErrorHandler {
 
