@@ -7,8 +7,6 @@ import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -42,7 +40,6 @@ public class DBHelper extends SQLiteOpenHelper {
     public static DBHelper getInstance(@DataSchemeVersion int version) {
         return instances.get(version);
     }
-
     public static DBHelper getOrCreateInstance(Context context, @DataSchemeVersion int version) {
         DBHelper ret;
         synchronized (instances) {
@@ -53,7 +50,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
     public static DBHelper createInstance(Context context, int version, DatabaseErrorHandler errorHandler) {
         synchronized (instances) {
-            if (instances.get(version) != null) throw new IllegalStateException("instance already here");
+            if (instances.get(version) != null)
+                throw new IllegalStateException("instance already here");
             DBHelper ret = new DBHelper(context, version, errorHandler);
             instances.put(version, ret);
             return ret;
@@ -62,15 +60,12 @@ public class DBHelper extends SQLiteOpenHelper {
     public static DBHelper createInstance(Context context, @DataSchemeVersion int version) {
         return createInstance(context, version, null);
     }
-
     private DBHelper(Context context, @DataSchemeVersion int version) {
         this(context, version, null);
     }
-
     public DBHelper(Context context, @DataSchemeVersion int version, DatabaseErrorHandler errorHandler) {
         super(context, "ruIfmoDroid2016RzdDemo", null, version, errorHandler);
     }
-
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (newVersion != 1) throw new RuntimeException("Wrong DB version: " + newVersion);
         db.beginTransaction();
@@ -113,6 +108,7 @@ public class DBHelper extends SQLiteOpenHelper {
             db.endTransaction();
         }
     }
+
     private void createTable(SQLiteDatabase db, int version) {
         db.execSQL("CREATE TABLE " + TABLE_NAME + " ("
                 + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -128,6 +124,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 + ROUTE_END_STATION_NAME + " TEXT, "
                 + DAY + " INTEGER);");
     }
+
     static long currentDay(Calendar calendar) {
         return calendar.get(Calendar.DAY_OF_YEAR) + calendar.get(Calendar.YEAR) * 366; //probably 365
     }

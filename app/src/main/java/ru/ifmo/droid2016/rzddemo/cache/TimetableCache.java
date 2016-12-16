@@ -8,22 +8,24 @@ import android.provider.BaseColumns;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
+import android.util.Log;
 
 import java.io.FileNotFoundException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.LinkedList;
+import java.util.List;
 
-import android.util.Log;
 import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
 
 import static ru.ifmo.droid2016.rzddemo.Constants.LOG_DATE_FORMAT;
 
 /**
  * Кэш расписания поездов.
- *
+ * <p>
  * Ключом является комбинация трех значений:
  * ID станции отправления, ID станции прибытия, дата в москомском часовом поясе
- *
+ * <p>
  * Единицей хранения является список поездов - {@link TimetableEntry}.
  */
 
@@ -42,7 +44,7 @@ public class TimetableCache {
 
     /**
      * Создает экземпляр кэша с указанной версией модели данных.
-     *
+     * <p>
      * Может вызываться на лююбом (в том числе UI потоке). Может быть создано несколько инстансов
      * {@link TimetableCache} -- все они должны потокобезопасно работать с одним физическим кэшом.
      */
@@ -60,9 +62,7 @@ public class TimetableCache {
      * @param fromStationId ID станции отправления
      * @param toStationId   ID станции прибытия
      * @param dateMsk       дата в московском часовом поясе
-     *
      * @return - список {@link TimetableEntry}
-     *
      * @throws FileNotFoundException - если в кэше отсуствуют запрашиваемые данные.
      */
     @WorkerThread
@@ -88,7 +88,7 @@ public class TimetableCache {
             int ciDSN = c.getColumnIndex(DBHelper.DEPARTURE_STATION_NAME);
             int ciASN = c.getColumnIndex(DBHelper.ARRIVAL_STATION_NAME);
             int ciTRI = c.getColumnIndex(DBHelper.TRAIN_ROUTE_ID);
-            int ciTI  = c.getColumnIndex(DBHelper.TRAIN_NAME);
+            int ciTI = c.getColumnIndex(DBHelper.TRAIN_NAME);
             int ciRSN = c.getColumnIndex(DBHelper.ROUTE_START_STATION_NAME);
             int ciREN = c.getColumnIndex(DBHelper.ROUTE_END_STATION_NAME);
             Log.d("RZDDB", String.valueOf(c.getPosition()));
@@ -120,9 +120,10 @@ public class TimetableCache {
             if (c != null) c.close();
             db.endTransaction();
         }
-        if (timetableEntryList.size() == 0) throw new FileNotFoundException("No data in timetable cache for: fromStationId="
-                + fromStationId + ", toStationId=" + toStationId
-                + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
+        if (timetableEntryList.size() == 0)
+            throw new FileNotFoundException("No data in timetable cache for: fromStationId="
+                    + fromStationId + ", toStationId=" + toStationId
+                    + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
         return timetableEntryList;
     }
 
