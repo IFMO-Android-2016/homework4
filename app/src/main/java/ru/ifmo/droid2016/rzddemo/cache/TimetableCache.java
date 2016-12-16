@@ -32,9 +32,6 @@ import static ru.ifmo.droid2016.rzddemo.cache.Helper.*;
  * Единицей хранения является список поездов - {@link TimetableEntry}.
  */
 
-/**
- * Modified by ivantrofimov on 07.12.2016
- */
 public class TimetableCache {
 
     @NonNull
