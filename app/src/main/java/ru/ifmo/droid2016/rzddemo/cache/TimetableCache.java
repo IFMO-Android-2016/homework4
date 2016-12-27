@@ -1,19 +1,20 @@
 package ru.ifmo.droid2016.rzddemo.cache;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
-import android.provider.BaseColumns;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 
 import java.io.FileNotFoundException;
+<<<<<<< HEAD
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
+=======
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+>>>>>>> parent of f47511d... rdy
 import java.util.List;
 
 import ru.ifmo.droid2016.rzddemo.model.TimetableEntry;
@@ -35,12 +36,10 @@ public class TimetableCache {
     private final Context context;
 
     /**
-     * Версия модели данных, с которой работает кэш.
+     * Версия модели данных, с которой работает кэщ.
      */
     @DataSchemeVersion
     private final int version;
-
-    private SQLiteStatement insertStatement = null;
 
     /**
      * Создает экземпляр кэша с указанной версией модели данных.
@@ -71,6 +70,7 @@ public class TimetableCache {
                                     @NonNull String toStationId,
                                     @NonNull Calendar dateMsk)
             throws FileNotFoundException {
+<<<<<<< HEAD
         final DBHelper helper = DBHelper.getOrCreateInstance(context, version);
         final SQLiteDatabase db = helper.getReadableDatabase();
         List<TimetableEntry> timetableEntryList = new LinkedList<>();
@@ -125,6 +125,12 @@ public class TimetableCache {
                     + fromStationId + ", toStationId=" + toStationId
                     + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
         return timetableEntryList;
+=======
+        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
+        throw new FileNotFoundException("No data in timetable cache for: fromStationId="
+                + fromStationId + ", toStationId=" + toStationId
+                + ", dateMsk=" + LOG_DATE_FORMAT.format(dateMsk.getTime()));
+>>>>>>> parent of f47511d... rdy
     }
 
     @WorkerThread
@@ -132,54 +138,6 @@ public class TimetableCache {
                     @NonNull String toStationId,
                     @NonNull Calendar dateMsk,
                     @NonNull List<TimetableEntry> timetable) {
-        SQLiteDatabase db = DBHelper.getOrCreateInstance(context, version).getWritableDatabase();
-        long day = DBHelper.currentDay(dateMsk);
-        db.beginTransaction();
-        Log.wtf("RZDDBP", Long.toString(day));
-        try {
-            if (insertStatement == null) insertStatement = db.compileStatement("insert into "
-                    + DBHelper.TABLE_NAME
-                    + " ("
-                    + DBHelper.DAY + ", "
-                    + DBHelper.DEPARTURE_STATION_ID + ", "
-                    + DBHelper.DEPARTURE_STATION_NAME + ", "
-                    + DBHelper.DEPARTURE_TIME + ", "
-                    + DBHelper.ARRIVAL_STATION_ID + ", "
-                    + DBHelper.ARRIVAL_STATION_NAME + ", "
-                    + DBHelper.ARRIVAL_TIME + ", "
-                    + DBHelper.TRAIN_ROUTE_ID + ", "
-                    + DBHelper.ROUTE_START_STATION_NAME + ", "
-                    + DBHelper.ROUTE_END_STATION_NAME
-                    + (version == DataSchemeVersion.V2 ? ", " + DBHelper.TRAIN_NAME : "") + ")"
-                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?" + (version == DataSchemeVersion.V2 ? ", ?)" : ")"));
-            insertStatement.bindLong(1, day);
-            insertStatement.bindString(2, fromStationId);
-            insertStatement.bindString(5, toStationId);
-            Log.d("RZDDBV", String.valueOf(version));
-            for (TimetableEntry e : timetable) {
-                insertStatement.bindString(3, e.departureStationName);
-                insertStatement.bindLong(4, e.departureTime.getTimeInMillis());
-                insertStatement.bindString(6, e.arrivalStationName);
-                insertStatement.bindLong(7, e.arrivalTime.getTimeInMillis());
-                insertStatement.bindString(8, e.trainRouteId);
-                insertStatement.bindString(9, e.routeStartStationName);
-                insertStatement.bindString(10, e.routeEndStationName);
-                if (version == DataSchemeVersion.V2) {
-                    if (e.trainName == null) {
-                        insertStatement.bindNull(11);
-                    } else {
-                        insertStatement.bindString(11, e.trainName);
-                    }
-                }
-                insertStatement.executeInsert();
-            }
-            insertStatement.clearBindings();
-            db.setTransactionSuccessful();
-        } catch (Throwable e) {
-            Log.d("RZDDB", e.getMessage());
-            e.printStackTrace();
-        } finally {
-            db.endTransaction();
-        }
+        // TODO: ДЗ - реализовать кэш на основе базы данных SQLite с учетом версии модели данных
     }
 }
